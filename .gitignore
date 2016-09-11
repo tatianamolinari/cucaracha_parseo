@@ -1,1 +1,4 @@
 *.pyc
+lexer_cuca_Cuca_parsetab.py
+lextab.py
+parser_Cuca_parsetab.py
