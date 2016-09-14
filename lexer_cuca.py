@@ -94,58 +94,145 @@ class Cuca(Parser):
     ''' empty : '''
     pass
 
+# ******************* ProgramT *******************
+#                Program [FunctionT]
+
+  def p_empty_program(self, p):
+    ''' empty_program : empty'''
+    p[0] = Program(children=[])
+
+  def p_not_empty_program(self,p):
+    ''' not_empty_program : function_declaration program '''
+    p[0] = p[2].push(p[1])
+
   def p_program(self, p):
-    ''' program : empty 
-                | function_declaration program '''
-    return ??
+    ''' program : empty_program 
+                | p_not_empty_program '''
+    return p[1]
+
+
+# ******************* FunctionT *******************
+#         Function Id Type [ParameterT] BlockT
+  def p_void_function_declaration(self,p):
+     ''' void_function_declaration  : FUN ID params block'''
+     p[0] = Function(children=[p[2],'Unit',p[3],p[4]])
+
+  def p_function_declaration_with_type(self,p):
+    ''' function_declaration_with_type  : FUN ID params COLON type block '''
+    p[0] = Function(children=[p[2],p[2],p[3],p[4]])
 
   def p_function_declaration(self, p):
-    ''' function_declaration  : FUN ID params block 
-                              | FUN ID params COLON type block '''
-    return ??
+    ''' function_declaration  : void_function_declaration 
+                              | function_declaration_with_type '''
+     p[0] = p[1]
+# ******************* ParameterT *******************
+#                  Parameter Id Type
+
+  def p_empty_params(self, p):
+    ''' empty_params : empty'''
+    p[0] = []
 
   def p_params(self, p):
     ''' params : LPARENT params_list RPARENT'''
-    return ??
+    p[0] = p[1]
 
   def p_params_list(self, p):
     ''' params_list : empty 
                     | not_empty_params_list'''
-    return ??
+    p[0] = p[1]
+
+  def p_parameters_list(self,p):
+    ''' parameters_list :  parameter COMMA not_empty_params_list '''
+    p[0] = p[2].push(p[1])
+
 
   def p_not_empty_params_list(self, p):
     ''' not_empty_params_list : parameter 
-                              | not_empty_params_list '''
-    return ???
+                              | parameters_list '''
+    p[0] = p[1]
 
   def p_parameter(self, p):
     ''' parameter : ID COLON type '''
-    return ??
+    p[0] = Parameter(p[1],p[2])
+
+# ******************* Type *******************
+# Int | Bool | Vec
 
   def p_type(self, p):
     ''' type : INT
              | BOOL
              | VEC '''
-    return ??
+    p[0] = p[1]
+# ******************* BlockT *******************
+#                  Block [StmtT]
 
   def p_block(self, p):
     ''' block : LBRACE instructions_list RBRACE '''
-    return ??
+    p[0] = Block(children=p[2])
 
-  def p_instructions_list(self, p):
-    '''instructions_list : empty
-                         |  instruction instructions_list'''
-    return ??
+# ******************* StmtT ******************* 
+
+  # StmtAssign Id ExprT
+  def p_assing(self,p):
+    '''assing : ID ASSIGN expression'''
+    p[0] = StmtAssign(children=[p[1],p[3]])
+
+  # StmtVecAssign Id ExprT ExprT 
+  def p_vector_assing(self,p):
+    '''vector_assing : ID LBRACK expression RBRACK ASSIGN expression'''
+    p[0] = StmtVecAssign(children=[p[1],p[3],p[6]])
+
+  # StmtIf ExprT BlockT
+  def p_if_stmt(self,p):
+    ''' if_stmt : IF expression block'''
+    p[0] = StmtIf(children=[p[2],p[3]])
+
+  # StmtIfElse ExprT BlockT BlockT
+  def p_if_else_stmt(self,p):
+    ''' if_else_stmt : IF expression block ELSE block'''
+    p[0] = StmtIfElse(children=[p[2],p[3],p[5]])
+
+  # StmtWhile ExprT BlockT
+  def p_while_stmt(self,p):
+    ''' while_stmt : WHILE expression block'''
+    p[0] = StmtWhile(children=[p[2],p[3]])
+
+  # StmtReturn ExprT
+  def p_return_stmt(self,p):
+    ''' return_stmt : RETURN expression'''
+    p[0] = StmtReturn(children=[p[2]]) 
+
+  # StmtCall Id [ExprT]
+  def p_call_stmt(self,p):
+    ''' call_stmt : ID LPAREN expressions_list RPAREN'''
+    p[0] = StmtCall(children=[p[1],p[2]])
 
   def p_instruction(self,p):
-    ''' instruction : ID ASSIGN expression
-                    | ID LBRACK expression RBRACK ASSIGN expression
-                    | IF expression block
-                    | IF expression block ELSE block
-                    | WHILE expression block
-                    | RETURN expression
-                    | ID LPAREN expressions_list RPAREN '''
-    return ??
+    ''' instruction : assing
+                    | vector_assing
+                    | if_stmt
+                    | if_else_stmt
+                    | while_stmt
+                    | return_stmt
+                    | call_stmt '''
+    p[0] = p[1]
+
+  def p_empty_instructions_list(self, p):
+    '''empty_instructions_list :  empty'''
+    p[0]=[]
+      
+  def p_not_empty_instructions_list(self, p):
+    '''not_empty_instructions_list :  instruction instructions_list'''
+    p[0] = p[2].append(p[1])
+
+
+  def p_instructions_list(self, p):
+    '''instructions_list : p_empty_instructions_list
+                         |  not_empty_instructions_list'''
+    p[0] = p[1]
+
+
+# ******************* ..... *******************
 
   def p_expressions_list(self,p):
     ''' expressions_list : empty
