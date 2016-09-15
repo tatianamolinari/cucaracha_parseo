@@ -119,7 +119,7 @@ class Cuca(Parser):
 
   def p_function_declaration_with_type(self,p):
     ''' function_declaration_with_type  : FUN ID params COLON type block '''
-    p[0] = Function(children=[p[2],p[2],p[3],p[4]])
+    p[0] = Function(children=[p[2],p[4],p[3],p[5]])
 
   def p_function_declaration(self, p):
     ''' function_declaration  : void_function_declaration 
@@ -232,12 +232,24 @@ class Cuca(Parser):
     p[0] = p[1]
 
 
-# ******************* ..... *******************
+# ******************* ExprT *******************
+
+# ExprVar Id Uso de una variable.
+# ExprConstNum Integer Constante numerica.
+# ExprConstBool Bool Constante booleana.
+# ExprVecMake [ExprT] Construccion de un vector.
+# ExprVecLength Id Longitud de un vector.
+# ExprVecDeref Id ExprT Acceso al i-esimo de un vector.
+# ExprCall Id [ExprT] Invocacion a una funcion. 
+
+# ExprAdd ExprT ExprT Suma.
+# ExprSub ExprT ExprT Resta.
+# ExprMul ExprT ExprT Multiplicacion.
 
   def p_expressions_list(self,p):
     ''' expressions_list : empty
                          | not_empty_expressions_list'''
-    return ??
+    p[0] = p[1]
 
   def p_not_empty_expressions_list(self,p):
     ''' not_empty_expressions_list : expression
@@ -246,62 +258,107 @@ class Cuca(Parser):
 
   def p_expression(self,p):
     ''' expression : logic_expression '''
-    return ??
+    p[0] = p[1]
+
+  def binary_expression_get_p(self,argument,expression1,expression2):
+    switcher = {
+        '<=':   ExprLe(children=[expression1,expression2]),  # ExprLe ExprT ExprT
+        '>=':   ExprGe(children=[expression1,expression2]),  # ExprGe ExprT ExprT
+        '<' :   ExprLt(children=[expression1,expression2]),  # ExprLt ExprT ExprT
+        '>' :   ExprGt(children=[expression1,expression2]),  # ExprGt ExprT ExprT
+        '==':   ExprEq(children=[expression1,expression2]),  # ExprEq ExprT ExprT
+        '!=':   ExprNe(children=[expression1,expression2]),  # ExprNe ExprT ExprT
+        '+' :   ExprAdd(children=[expression1,expression2]), # ExprAdd ExprT ExprT
+        '-' :   ExprSub(children=[expression1,expression2]), # ExprSub ExprT ExprT
+        '*' :   ExprMul(children=[expression1,expression2]), # ExprMul ExprT ExprT
+        'and':  ExprAnd(children=[expression1,expression2]), # ExprAnd ExprT ExprT
+        'or':   ExprOr(children=[expression1,expression2])   # ExprOr ExprT ExprT
+        }
+    return switcher.get(argument, "ERROR")
+
+  def p_binary_logic_expression(self,p):
+    ''' binary_logic_expression  : logic_expression AND atomic_logic_expression
+                                 | logic_expression OR atomic_logic_expression'''
+    p[0]=self.binary_expression_get_p(p[2],p[1],p[3])
+    
+  # ExprNot ExprT
+  def p_atomic_logic_expression_not(self, p):
+    ''' atomic_logic_expression_not : NOT atomic_logic_expression'''
+    p[0] = ExprNot(p[2])
 
   def p_logic_expression(self, p): 
-    ''' logic_expression  : logic_expression AND atomic_logic_expression
-                          | logic_expression OR atomic_logic_expression
+    ''' logic_expression  : binary_logic_expression
                           | atomic_logic_expression '''
-    return ??
+    p[0] = p[1]
 
   def p_atomic_logic_expression(self, p):
-    ''' atomic_logic_expression : NOT atomic_logic_expression
+    ''' atomic_logic_expression : atomic_logic_expression_not
                                 | relational_expression '''
-    return ??
+    p[0] = p[1]
+
+
+  def p_binary_relational_expression(self, p): 
+    ''' binary_relational_expression : additive_expression LE additive_expression
+                                     | additive_expression GE additive_expression
+                                     | additive_expression LT additive_expression
+                                     | additive_expression GT additive_expression
+                                     | additive_expression EQ additive_expression
+                                     | additive_expression NE additive_expression'''
+    p[0] = self.binary_expression_get_p(p[2],p[1],p[3])
+
 
   def p_relational_expression(self, p):
-    ''' relational_expression : additive_expression LE additive_expression
-                              | additive_expression GE additive_expression
-                              | additive_expression LT additive_expression
-                              | additive_expression GT additive_expression
-                              | additive_expression EQ additive_expression
-                              | additive_expression NE additive_expression
+    ''' relational_expression : binary_relational_expression
                               | additive_expression '''
-    return ??
+    return p[0] = p[1]
+
+  def p_additive_binary_expression(self,p):
+    ''' additive_binary_expression : additive_expression PLUS multiplicative_expression
+                                   | additive_expression MINUS multiplicative_expression '''
+  
+    p[0] = self.binary_expression_get_p(p[2],p[1],p[3])  
+  
 
   def p_additive_expression(self, p):
-    ''' additive_expression : additive_expression PLUS multiplicative_expression
-                            | additive_expression MINUS multiplicative_expression
+    ''' additive_expression : additive_binary_expression
                             | multiplicative_expression '''
-    return ??
+    p[0] = p[1]
 
+  def p_multiplicative_binary_expression(self,p):
+    ''' multiplicative_binary_expression : multiplicative_expression TIMES atomic_expression'''
+    p[0] = self.binary_expression_get_p(p[2],p[1],p[3]) 
+    
   def p_multiplicative_expression(self, p):
-    ''' multiplicative_expression : multiplicative_expression TIMES atomic_expression
+    ''' multiplicative_expression : multiplicative_binary_expression
                                   | atomic_expression '''
-    return ??
+    p[0] = p[1]
 
+
+  def p_atomic_expression_three(self, p):
+    ''' atomic_expression_three : LBRACK expressions_list RBRACK
+                                | LPAREN expression RPAREN '''
+    p[0]=p[2]
+
+  def p_atomic_list_expression(self,p):
+    ''' atomic_list_expression : ID LBRACK expression RBRACK
+                               | ID LPAREN expressions_list RPAREN'''
+    p[0]=p[]
+
+    
   def atomic_expression(self, p):
     ''' atomic_expression : ID
                           | NUM
                           | TRUE
                           | FALSE
-                          | LBRACK expressions_list RBRACK
                           | HASH ID
-                          | ID LBRACK expression RBRACK
-                          | ID LPAREN expressions_list RPAREN
-                          | LPAREN expression RPAREN '''
+                          | atomic_list_expression
+                          | atomic_expression_three '''
     return ??
 
 
-
-
-
-
-  # Hay que chequear estás funciones
-
   def p_statement_assign(self, p):
-    '''statement :   ID ASSIGN NUM
-           |  ID ASSIGN expression'''
+    '''statement :  ID ASSIGN NUM
+                 |  ID ASSIGN expression'''
     self.names[p[1]] = p[3]
 
   def p_expression_group(self, p):
@@ -319,35 +376,6 @@ class Cuca(Parser):
     except LookupError:
       print "Undefined name '%s'" % p[1]
       p[0] = 0
-
-  def p_expression_binop(self,p):
-    '''expression : expression PLUS expression
-         | expression MINUS expression
-         | expression TIMES expression
-         | expression AND expression
-         | expression OR expression
-         | expression GT expression
-         | expression GE expression
-         | expression LE expression
-         | expression LT expression
-         | expression EQ expression
-         | expression NE expression'''
-
-                #type     children    leaf
-    p[0] = Node("binop", [p[1],p[3]], p[2])
-    #p[0] = ('binary-expression',p[2],p[1],p[3])
-
-  def p_expression_simpleop(self, p):
-    '''statement :   NOT expression'''
-    p[0] = ('simple-expression',p[1],p[2])
-
-  def p_expression_if(self, p):
-    'expression : IF expression'
-    p[0] = ('if-expression',p[1],p[2])
-
-  def p_expression_ifelse(self, p):
-    'expression : IF expression ELSE expression'
-    p[0] = ('if-else-expression',p[1],p[2], p[3], p[4])
 
   def t_newline(self, t):
     r'\n+'
