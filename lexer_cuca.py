@@ -8,6 +8,8 @@ from node import Node
 
 class Cuca(Parser):
 
+  
+
   reserved = {
     'if'     : 'IF',
     'else'   : 'ELSE',
@@ -175,6 +177,7 @@ class Cuca(Parser):
   # StmtAssign Id ExprT
   def p_assing(self,p):
     '''assing : ID ASSIGN expression'''
+    self.names[p[1]] = p[3]
     p[0] = StmtAssign(children=[p[1],p[3]])
 
   # StmtVecAssign Id ExprT ExprT 
@@ -246,15 +249,24 @@ class Cuca(Parser):
 # ExprSub ExprT ExprT Resta.
 # ExprMul ExprT ExprT Multiplicacion.
 
+  def p_empty_expression_list(self,p):
+    ''' empty_expression_list : empty'''
+    p[0] = []
+    
   def p_expressions_list(self,p):
-    ''' expressions_list : empty
+    ''' expressions_list : empty_expression_list
                          | not_empty_expressions_list'''
     p[0] = p[1]
 
+
+  def p_not_empty_expressions_list_head(self,p):
+    ''' not_empty_expressions_list_head : expression COMMA not_empty_expressions_list'''
+    p[0] = [p[1]]++p[3]
+    
   def p_not_empty_expressions_list(self,p):
     ''' not_empty_expressions_list : expression
-                                   | expression COMMA not_empty_expressions_list'''
-    return ??
+                                   | not_empty_expressions_list_head'''
+    p[0] = p[1]
 
   def p_expression(self,p):
     ''' expression : logic_expression '''
@@ -339,27 +351,26 @@ class Cuca(Parser):
                                 | LPAREN expression RPAREN '''
     p[0]=p[2]
 
-  def p_atomic_list_expression(self,p):
-    ''' atomic_list_expression : ID LBRACK expression RBRACK
-                               | ID LPAREN expressions_list RPAREN'''
-    p[0]=p[]
+
+  def p_atomic_id_expression(self,p):
+    ''' atomic_id_expression : ID LBRACK expression RBRACK'''
+    p[0]=[p[1],p[3]]
+      
+  def p_atomic_expression_list(self,p):
+    ''' atomic_expression_list : ID LPAREN expressions_list RPAREN'''
+    p[0]=[p[1]]++p[3]
 
     
-  def atomic_expression(self, p):
+  def p_atomic_expression(self, p):
     ''' atomic_expression : ID
                           | NUM
                           | TRUE
                           | FALSE
                           | HASH ID
-                          | atomic_list_expression
+                          | atomic_id_expression
+                          | atomic_expression_list
                           | atomic_expression_three '''
-    return ??
-
-
-  def p_statement_assign(self, p):
-    '''statement :  ID ASSIGN NUM
-                 |  ID ASSIGN expression'''
-    self.names[p[1]] = p[3]
+    p[0]= p[1] 
 
   def p_expression_group(self, p):
     'expression : LPAREN expression RPAREN'
