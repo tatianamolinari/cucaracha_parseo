@@ -4,7 +4,7 @@ import sys, os
 sys.path.insert(0,"../..")
 
 from parser import Parser
-from node import Node
+from node import *
 
 class Cuca(Parser):
 
@@ -109,12 +109,13 @@ class Cuca(Parser):
 
   def p_program(self, p):
     ''' program : empty_program 
-                | p_not_empty_program '''
+                | not_empty_program '''
     return p[1]
 
 
 # ******************* FunctionT *******************
 #         Function Id Type [ParameterT] BlockT
+
   def p_void_function_declaration(self,p):
      ''' void_function_declaration  : FUN ID params block'''
      p[0] = Function(children=[p[2],'Unit',p[3],p[4]])
@@ -126,7 +127,9 @@ class Cuca(Parser):
   def p_function_declaration(self, p):
     ''' function_declaration  : void_function_declaration 
                               | function_declaration_with_type '''
-     p[0] = p[1]
+    p[0] = p[1]
+
+
 # ******************* ParameterT *******************
 #                  Parameter Id Type
 
@@ -135,27 +138,28 @@ class Cuca(Parser):
     p[0] = []
 
   def p_params(self, p):
-    ''' params : LPARENT params_list RPARENT'''
+    ''' params :  LPAREN params_list RPAREN '''
     p[0] = p[1]
 
   def p_params_list(self, p):
-    ''' params_list : empty 
+    ''' params_list : empty_params
                     | not_empty_params_list'''
     p[0] = p[1]
 
-  def p_parameters_list(self,p):
-    ''' parameters_list :  parameter COMMA not_empty_params_list '''
-    p[0] = p[2].push(p[1])
-
-
   def p_not_empty_params_list(self, p):
-    ''' not_empty_params_list : parameter 
-                              | parameters_list '''
+    ''' not_empty_params_list : parameter
+                              | parameters_list_head '''
     p[0] = p[1]
+
+  def p_parameters_list_head(self,p):
+    ''' parameters_list_head :  parameter COMMA not_empty_params_list '''
+    p[0] = [p[1]] ++ p[2]
 
   def p_parameter(self, p):
     ''' parameter : ID COLON type '''
-    p[0] = Parameter(p[1],p[2])
+    p[0] = Parameter(children=(p[1],p[3]))
+
+
 
 # ******************* Type *******************
 # Int | Bool | Vec
@@ -165,12 +169,15 @@ class Cuca(Parser):
              | BOOL
              | VEC '''
     p[0] = p[1]
+
+
 # ******************* BlockT *******************
 #                  Block [StmtT]
 
   def p_block(self, p):
     ''' block : LBRACE instructions_list RBRACE '''
     p[0] = Block(children=p[2])
+
 
 # ******************* StmtT ******************* 
 
@@ -226,28 +233,16 @@ class Cuca(Parser):
       
   def p_not_empty_instructions_list(self, p):
     '''not_empty_instructions_list :  instruction instructions_list'''
-    p[0] = p[2].append(p[1])
+    p[0] = [p[1]] ++ p[2]
 
 
   def p_instructions_list(self, p):
-    '''instructions_list : p_empty_instructions_list
+    '''instructions_list : empty_instructions_list
                          |  not_empty_instructions_list'''
     p[0] = p[1]
 
 
 # ******************* ExprT *******************
-
-# ExprVar Id Uso de una variable.
-# ExprConstNum Integer Constante numerica.
-# ExprConstBool Bool Constante booleana.
-# ExprVecMake [ExprT] Construccion de un vector.
-# ExprVecLength Id Longitud de un vector.
-# ExprVecDeref Id ExprT Acceso al i-esimo de un vector.
-# ExprCall Id [ExprT] Invocacion a una funcion. 
-
-# ExprAdd ExprT ExprT Suma.
-# ExprSub ExprT ExprT Resta.
-# ExprMul ExprT ExprT Multiplicacion.
 
   def p_empty_expression_list(self,p):
     ''' empty_expression_list : empty'''
@@ -322,7 +317,7 @@ class Cuca(Parser):
   def p_relational_expression(self, p):
     ''' relational_expression : binary_relational_expression
                               | additive_expression '''
-    return p[0] = p[1]
+    p[0] = p[1]
 
   def p_additive_binary_expression(self,p):
     ''' additive_binary_expression : additive_expression PLUS multiplicative_expression
@@ -357,7 +352,7 @@ class Cuca(Parser):
     p[0]=[p[1],p[3]]
       
   def p_atomic_expression_list(self,p):
-    ''' atomic_expression_list : ID LPAREN expressions_list RPAREN'''
+    ''' atomic_expression_list : LPAREN expressions_list RPAREN'''
     p[0]=[p[1]]++p[3]
 
     
@@ -401,7 +396,7 @@ class Cuca(Parser):
     if p:
          print("Syntax error at token", p.type)
          # Just discard the token and tell the parser it's okay.
-         parser.errok()
+         self.yacc.errok()
     else:
          print("Syntax error at EOF")
 
