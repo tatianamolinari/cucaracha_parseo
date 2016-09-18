@@ -124,7 +124,7 @@ class Cuca(Parser):
 
   def p_void_function_declaration(self,p):
      ''' void_function_declaration  : FUN ID params block'''
-     p[0] = Function(children=[p[2],'Unit',p[3],p[4]])
+     p[0] = Function(children=([Node(p[2]),Node('Unit')] + p[3] + [p[4]]))
 
   def p_function_declaration_with_type(self,p):
     ''' function_declaration_with_type  : FUN ID params COLON type block '''
@@ -145,7 +145,7 @@ class Cuca(Parser):
 
   def p_params(self, p):
     ''' params :  LPAREN params_list RPAREN '''
-    p[0] = p[1]
+    p[0] = p[2]
 
   def p_params_list(self, p):
     ''' params_list : empty_params
@@ -159,7 +159,7 @@ class Cuca(Parser):
 
   def p_parameters_list_head(self,p):
     ''' parameters_list_head :  parameter COMMA not_empty_params_list '''
-    p[0] = [p[1]] ++ p[2]
+    p[0] = [p[1]] + p[2]
 
   def p_parameter(self, p):
     ''' parameter : ID COLON type '''
@@ -240,7 +240,7 @@ class Cuca(Parser):
       
   def p_not_empty_instructions_list(self, p):
     '''not_empty_instructions_list :  instruction instructions_list'''
-    p[0] = [p[1]] ++ p[2]
+    p[0] = [p[1]] + p[2]
 
 
   def p_instructions_list(self, p):
@@ -263,7 +263,7 @@ class Cuca(Parser):
 
   def p_not_empty_expressions_list_head(self,p):
     ''' not_empty_expressions_list_head : expression COMMA not_empty_expressions_list'''
-    p[0] = [p[1]]++p[3]
+    p[0] = [p[1]] + p[3]
     
   def p_not_empty_expressions_list(self,p):
     ''' not_empty_expressions_list : expression
@@ -360,7 +360,7 @@ class Cuca(Parser):
       
   def p_atomic_expression_list(self,p):
     ''' atomic_expression_list : LPAREN expressions_list RPAREN'''
-    p[0]=[p[1]]++p[3]
+    p[0]=[p[1]] + p[3]
 
     
   def p_atomic_expression(self, p):

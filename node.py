@@ -3,13 +3,23 @@ sys.path.insert(0,"../..")
 
 class Node:
 
-  def __init__(self,typeNode,children=None,leaf=None):
-    self.typeNode = typeNode
-    if children:
-      self.children = children
-    else:
-      self.children = [ ]
-      self.leaf = leaf
+	def __init__(self,typeNode,children=None,leaf=None):
+	  	self.typeNode = typeNode
+	  	if children:
+	  		self.children = children
+	  	else:
+	  		self.children = [ ]
+	    	self.leaf = leaf
+
+	def __str__(self, level=0):
+		ret = "\t"*level+repr(self.typeNode)+"\n"
+	  	for child in self.children:
+	  		print child
+	  		ret += child.__str__(level+1)
+	  	return ret
+
+	def __repr__(self):
+		return '<tree node representation>'
 
 class Function(Node):
 	def __init__(self,children=[],leaf=None):
@@ -17,6 +27,7 @@ class Function(Node):
 
 	def push(self,child):
 		self.children.append(child)
+		return self
 
 class Program(Node):
 	def __init__(self,children=[],leaf=None):
@@ -24,6 +35,7 @@ class Program(Node):
 
  	def push(self,child):
 		self.children.append(child)
+		return self
 
 class Parameter(Node):
 	def __init__(self,children=[],leaf=None):
@@ -31,6 +43,7 @@ class Parameter(Node):
 
  	def push(self,child):
 		self.children.append(child)
+		return self
 
 class Block(Node):
 	def __init__(self,children=[],leaf=None):
