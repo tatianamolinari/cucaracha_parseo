@@ -222,7 +222,8 @@ class Cuca(Parser):
   # StmtCall Id [ExprT]
   def p_call_stmt(self,p):
     ''' call_stmt : ID LPAREN expressions_list RPAREN'''
-    p[0] = StmtCall(children=[p[1],p[2]])
+    print p[3]
+    p[0] = StmtCall(children=[[Node(p[1])]+p[3]])
 
   def p_instruction(self,p):
     ''' instruction : assing
@@ -362,13 +363,31 @@ class Cuca(Parser):
     ''' atomic_expression_list : LPAREN expressions_list RPAREN'''
     p[0]=[p[1]] + p[3]
 
+
+  def p_id(self,p):
+    ''' id : ID'''
+    p[0] = Id(leaf=p[1])
+
+  def p_num(self,p):
+    ''' num : NUM'''
+    p[0] = ExprConstNum(leaf=p[1])
+
+  def p_bool(self,p):
+    ''' bool : TRUE
+             | FALSE'''
+    p[0] = ExprConstBool(leaf=p[1])
+
+  def p_vec_length(self,p):
+    ''' vec_length : HASH ID'''
+    p[0] = ExprVecLength(leaf=p[2])
+
+    
     
   def p_atomic_expression(self, p):
-    ''' atomic_expression : ID
-                          | NUM
-                          | TRUE
-                          | FALSE
-                          | HASH ID
+    ''' atomic_expression : id
+                          | num
+                          | bool
+                          | vec_length
                           | atomic_id_expression
                           | atomic_expression_list
                           | atomic_expression_three '''
@@ -389,7 +408,6 @@ class Cuca(Parser):
     except LookupError:
       print "Undefined name '%s'" % p[1]
       p[0] = 0
-
   def t_newline(self, t):
     r'\n+'
     t.lexer.lineno += t.value.count("\n")
