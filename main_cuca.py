@@ -8,10 +8,7 @@ if __name__ == "__main__":
 
   cuca = Cuca()
   data = '''fun main() {
-  putChar(72)
-  putChar(79)
-  putChar(76)
-  putChar(65)
+  
 }'''
 
 
