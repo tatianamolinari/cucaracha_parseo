@@ -124,7 +124,7 @@ class Cuca(Parser):
 
   def p_void_function_declaration(self,p):
      ''' void_function_declaration  : FUN ID params block'''
-     p[0] = Function(children=([Node(p[2]),Node('Unit')] + p[3] + [p[4]]))
+     p[0] = Function(children=(Id(leaf=p[2]),Type(leaf='Unit')] + p[3] + [p[4]]))
 
   def p_function_declaration_with_type(self,p):
     ''' function_declaration_with_type  : FUN ID params COLON type block '''
@@ -135,6 +135,9 @@ class Cuca(Parser):
                               | function_declaration_with_type '''
     p[0] = p[1]
 
+  def p_id(self,p):
+    ''' id : ID'''
+    p[0] = Id(leaf=p[1])
 
 # ******************* ParameterT *******************
 #                  Parameter Id Type
@@ -174,7 +177,7 @@ class Cuca(Parser):
     ''' type : INT
              | BOOL
              | VEC '''
-    p[0] = p[1]
+    p[0] = Type(leaf=p[1])
 
 
 # ******************* BlockT *******************
@@ -182,7 +185,6 @@ class Cuca(Parser):
 
   def p_block(self, p):
     ''' block : LBRACE instructions_list RBRACE '''
-    print p[2]
     p[0] = Block(children=p[2])
 
 
@@ -363,10 +365,9 @@ class Cuca(Parser):
     ''' atomic_expression_list : LPAREN expressions_list RPAREN'''
     p[0]=[p[1]] + p[3]
 
-
-  def p_id(self,p):
-    ''' id : ID'''
-    p[0] = Id(leaf=p[1])
+  def p_expr_var(self,p):
+    ''' expr_var : ID'''
+    p[0] = ExprVar(leaf=p[1])
 
   def p_num(self,p):
     ''' num : NUM'''
@@ -384,7 +385,7 @@ class Cuca(Parser):
     
     
   def p_atomic_expression(self, p):
-    ''' atomic_expression : id
+    ''' atomic_expression : expr_var
                           | num
                           | bool
                           | vec_length
