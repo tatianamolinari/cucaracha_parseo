@@ -7,12 +7,16 @@ from lexer_cuca import Cuca
 if __name__ == "__main__":
 
   cuca = Cuca()
-  data = '''fun main() {
-  putChar(72)
-  putChar(79)
-  putChar(76)
-  putChar(65)
-}'''
+  data = '''fun producto(v : Vec) : Int {
+  i := 0
+  p := 1
+  while i < #v {
+    p := p * v[i]
+    i := i + 1
+  }
+  return p
+}
+'''
 
 
   #cuca.lexer.input(data)

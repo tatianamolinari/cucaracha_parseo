@@ -12,10 +12,8 @@ class Node:
 	    	self.leaf = leaf
 
 	def __str__(self, level=0):
-	  	if self.leaf <> None:
-	  		ret = "\t"*level+repr(self.leaf)+"\n"
-		else:
-			ret = "\t"*level+repr(self.typeNode)+"\n"
+		ret = "\t"*level+ "(" +repr(self.typeNode)+"\n"
+		print self.typeNode
 	  	for child in self.children:
 	  		ret += child.__str__(level+1)
 	  	return ret
@@ -27,9 +25,15 @@ class Id(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'Id',children,leaf)
 
+	def __str__(self,level=0):
+	  	return "\t"*level+repr(self.leaf)+"\n"
+
 class Type(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'Type',children,leaf)
+
+	def __str__(self,level=0):
+	  	return "\t"*level+repr(self.leaf)+"\n"
 
 class Function(Node):
 	def __init__(self,children=[],leaf=None):
@@ -98,6 +102,11 @@ class ExprVar(Node):
 class ExprConstNum(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprConstNum',children,leaf)
+	def __str__(self,level):
+	  	ret = "\t"*level+ "(" +repr(self.typeNode)+"\n"
+	  	ret = ret + "\t"*(level+1)+repr(self.leaf)+"\n"
+	  	ret = ret + "\t"*(level)+ ")" +"\n"
+	  	return ret
 
 class ExprConstBool(Node):
 	def __init__(self,children=[],leaf=None):

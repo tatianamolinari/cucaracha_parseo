@@ -121,7 +121,7 @@ class Cuca(Parser):
 
   def p_function_declaration_with_type(self,p):
     ''' function_declaration_with_type  : FUN id params COLON type block '''
-    p[0] = Function(children=([p[2],Type(leaf=p[4])] + p[3] + [p[4]]))
+    p[0] = Function(children=([p[2],p[5]] + p[3] + [p[6]]))
 
   def p_function_declaration(self, p):
     ''' function_declaration  : void_function_declaration 
@@ -382,7 +382,9 @@ class Cuca(Parser):
     ''' vec_length : HASH ID'''
     p[0] = ExprVecLength(leaf=p[2])
 
-    
+  def p_vec_deref(self,p):
+    ''' vec_deref : id expression '''
+    p[0] = ExprVecDeref(children=[p[1],p[2]])
     
   def p_atomic_expression(self, p):
     ''' atomic_expression : expr_var
@@ -391,7 +393,8 @@ class Cuca(Parser):
                           | vec_length
                           | atomic_id_expression
                           | atomic_expression_list
-                          | atomic_expression_three '''
+                          | atomic_expression_three 
+                          | vec_deref '''
     p[0]= p[1] 
 
   def p_expression_group(self, p):
