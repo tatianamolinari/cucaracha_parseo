@@ -13,7 +13,9 @@ class Node:
 
 	def __str__(self, level=0):
 		ret = "\t"*level+repr(self.typeNode)+"\n"
+		print self.typeNode
 	  	for child in self.children:
+	  		print "hola hijo"
 	  		print child
 	  		ret += child.__str__(level+1)
 	  	return ret

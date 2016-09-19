@@ -12,7 +12,6 @@ class Cuca(Parser):
     'IF',
     'ELSE',
     'WHILE',
-    'DEF',
     'RETURN',
     'FUN',
     'AND',
@@ -124,7 +123,7 @@ class Cuca(Parser):
 
   def p_void_function_declaration(self,p):
      ''' void_function_declaration  : FUN ID params block'''
-     p[0] = Function(children=(Id(leaf=p[2]),Type(leaf='Unit')] + p[3] + [p[4]]))
+     p[0] = Function(children=([Id(leaf=p[2]),Type(leaf='Unit')] + p[3] + [p[4]]))
 
   def p_function_declaration_with_type(self,p):
     ''' function_declaration_with_type  : FUN ID params COLON type block '''
@@ -223,9 +222,8 @@ class Cuca(Parser):
 
   # StmtCall Id [ExprT]
   def p_call_stmt(self,p):
-    ''' call_stmt : ID LPAREN expressions_list RPAREN'''
-    print p[3]
-    p[0] = StmtCall(children=[[Node(p[1])]+p[3]])
+    ''' call_stmt : id LPAREN expressions_list RPAREN'''
+    p[0] = StmtCall(children=([p[1]]+p[3]))
 
   def p_instruction(self,p):
     ''' instruction : assing
@@ -268,8 +266,12 @@ class Cuca(Parser):
     ''' not_empty_expressions_list_head : expression COMMA not_empty_expressions_list'''
     p[0] = [p[1]] + p[3]
     
+  def p_simple_list_expression(self,p):
+    '''simple_list_expression : expression'''
+    p[0] = [p[1]]
+
   def p_not_empty_expressions_list(self,p):
-    ''' not_empty_expressions_list : expression
+    ''' not_empty_expressions_list : simple_list_expression
                                    | not_empty_expressions_list_head'''
     p[0] = p[1]
 
