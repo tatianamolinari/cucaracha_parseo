@@ -78,7 +78,8 @@ class Cuca(Parser):
       #print "parsed number %s" % repr(t.value)
     return t
 
-  t_ignore_COMMENT = r'\/\/*'
+  t_ignore_COMMENT = r'\/\/.*'
+  print t_ignore_COMMENT
   t_ignore = " \t"
 
   precedence = (
@@ -115,12 +116,12 @@ class Cuca(Parser):
 #         Function Id Type [ParameterT] BlockT
 
   def p_void_function_declaration(self,p):
-     ''' void_function_declaration  : FUN ID params block'''
-     p[0] = Function(children=([Id(leaf=p[2]),Type(leaf='Unit')] + p[3] + [p[4]]))
+     ''' void_function_declaration  : FUN id params block'''
+     p[0] = Function(children=([p[2],Type(leaf='Unit')] + p[3] + [p[4]]))
 
   def p_function_declaration_with_type(self,p):
-    ''' function_declaration_with_type  : FUN ID params COLON type block '''
-    p[0] = Function(children=([Id(leaf=p[2]),Type(leaf=p[4])] + p[3] + [p[4]]))
+    ''' function_declaration_with_type  : FUN id params COLON type block '''
+    p[0] = Function(children=([p[2],Type(leaf=p[4])] + p[3] + [p[4]]))
 
   def p_function_declaration(self, p):
     ''' function_declaration  : void_function_declaration 
@@ -158,7 +159,7 @@ class Cuca(Parser):
 
   def p_parameters_list_head(self,p):
     ''' parameters_list_head :  parameter COMMA not_empty_params_list '''
-    p[0] = [p[1]] + p[2]
+    p[0] = [p[1]] + p[3]
 
   def p_parameter(self, p):
     ''' parameter : id COLON type '''
@@ -188,13 +189,13 @@ class Cuca(Parser):
 
   # StmtAssign Id ExprT
   def p_assing(self,p):
-    '''assing : ID ASSIGN expression'''
+    '''assing : id ASSIGN expression'''
     self.names[p[1]] = p[3]
     p[0] = StmtAssign(children=[p[1],p[3]])
 
   # StmtVecAssign Id ExprT ExprT 
   def p_vector_assing(self,p):
-    '''vector_assing : ID LBRACK expression RBRACK ASSIGN expression'''
+    '''vector_assing : id LBRACK expression RBRACK ASSIGN expression'''
     p[0] = StmtVecAssign(children=[p[1],p[3],p[6]])
 
   # StmtIf ExprT BlockT
@@ -357,7 +358,7 @@ class Cuca(Parser):
 
 
   def p_atomic_id_expression(self,p):
-    ''' atomic_id_expression : ID LBRACK expression RBRACK'''
+    ''' atomic_id_expression : id LBRACK expression RBRACK'''
     p[0]=[p[1],p[3]]
       
   def p_atomic_expression_list(self,p):
@@ -365,7 +366,7 @@ class Cuca(Parser):
     p[0]=[p[1]] + p[3]
 
   def p_expr_var(self,p):
-    ''' expr_var : ID'''
+    ''' expr_var : id'''
     p[0] = ExprVar(leaf=p[1])
 
   def p_num(self,p):
