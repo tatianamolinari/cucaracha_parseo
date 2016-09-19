@@ -8,25 +8,25 @@ from node import *
 
 class Cuca(Parser):
 
-  reserved = (
-    'IF',
-    'ELSE',
-    'WHILE',
-    'RETURN',
-    'FUN',
-    'AND',
-    'OR',
-    'NOT', 
-    'BOOL',
-    'INT',
-    'VEC',
-    'TRUE',
-    'FALSE'
-   )
+  reserved = {
+    'if'     : 'IF',
+    'else'   : 'ELSE',
+    'while'  : 'WHILE',
+    'return' : 'RETURN',
+    'fun'    : 'FUN',
+    'and'    : 'AND',
+    'or'     : 'OR',
+    'not'    : 'NOT', 
+    'Bool'   : 'BOOL',
+    'Int'    : 'INT',
+    'Vec'    : 'VEC',
+    'True'   : 'TRUE',
+    'False'  : 'FALSE'
+  }
 
   
 
-  tokens = reserved + (
+  tokens = list(reserved.values()) + [
       'ID',
       'NUM', 
       'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE', 'LBRACK', 'RBRACK',
@@ -34,7 +34,7 @@ class Cuca(Parser):
       'GT', 'GE', 'LE', 'LT', 'EQ', 'NE',  
       'ASSIGN',
       'COMMA', 'COLON', 'HASH'
-      )
+      ]
 
   # Tokens
    
@@ -63,16 +63,9 @@ class Cuca(Parser):
   t_HASH            = r'\#'
 
 
-  # Identifiers and reserved words
-
-  reserved_map = { }
-
-  for r in reserved:
-      reserved_map[r.lower()] = r
-
   def t_ID(self,t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = Cuca.reserved_map.get(t.value,'ID')    # Chequeo de palabras reservadas
+    t.type = Cuca.reserved.get(t.value,'ID')    # Chequeo de palabras reservadas
     return t
     
   def t_NUM(self, t):
