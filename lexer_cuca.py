@@ -127,7 +127,7 @@ class Cuca(Parser):
 
   def p_function_declaration_with_type(self,p):
     ''' function_declaration_with_type  : FUN ID params COLON type block '''
-    p[0] = Function(children=[p[2],p[4],p[3],p[5]])
+    p[0] = Function(children=([Id(leaf=p[2]),Type(leaf=p[4])] + p[3] + [p[4]]))
 
   def p_function_declaration(self, p):
     ''' function_declaration  : void_function_declaration 
@@ -154,8 +154,12 @@ class Cuca(Parser):
                     | not_empty_params_list'''
     p[0] = p[1]
 
+  def p_simple_params_lists(self,p):
+    ''' simple_params_lists : parameter'''
+    p[0] = [p[1]]
+
   def p_not_empty_params_list(self, p):
-    ''' not_empty_params_list : parameter
+    ''' not_empty_params_list : simple_params_lists
                               | parameters_list_head '''
     p[0] = p[1]
 
@@ -164,7 +168,7 @@ class Cuca(Parser):
     p[0] = [p[1]] + p[2]
 
   def p_parameter(self, p):
-    ''' parameter : ID COLON type '''
+    ''' parameter : id COLON type '''
     p[0] = Parameter(children=(p[1],p[3]))
 
 
@@ -421,6 +425,7 @@ class Cuca(Parser):
 
   # FUNCIÓN DE ERROR. ESTO HABRIA QUE MEJORARLO...
   def p_error(self,p):
+    print p
     if p:
          print("Syntax error at token", p.type)
          # Just discard the token and tell the parser it's okay.
