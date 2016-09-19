@@ -12,7 +12,10 @@ class Node:
 	    	self.leaf = leaf
 
 	def __str__(self, level=0):
-		ret = "\t"*level+repr(self.typeNode)+"\n"
+	  	if self.leaf <> None:
+	  		ret = "\t"*level+repr(self.leaf)+"\n"
+		else:
+			ret = "\t"*level+repr(self.typeNode)+"\n"
 	  	for child in self.children:
 	  		ret += child.__str__(level+1)
 	  	return ret
