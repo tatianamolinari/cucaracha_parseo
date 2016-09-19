@@ -12,12 +12,13 @@ class Node:
 	    	self.leaf = leaf
 
 	def __str__(self, level=0):
-		ret = "\t"*level+ "(" +repr(self.typeNode)+"\n"
+		ret = " "*level+ "(" +str(self.typeNode)+"\n"
 		#print self.typeNode
 		#print self.children
 	  	for child in self.children:
 	  		#print child
 	  		ret += child.__str__(level+1)
+	  	ret += " "*level+ ") \n"
 	  	return ret
 
 	def __repr__(self):
@@ -28,14 +29,14 @@ class Id(Node):
 		Node.__init__(self,'Id',children,leaf)
 
 	def __str__(self,level=0):
-	  	return "\t"*level+repr(self.leaf)+"\n"
+	  	return " "*level+str(self.leaf)+"\n"
 
 class Type(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'Type',children,leaf)
 
 	def __str__(self,level=0):
-	  	return "\t"*level+repr(self.leaf)+"\n"
+	  	return " "*level+str(self.leaf)+"\n"
 
 class Function(Node):
 	def __init__(self,children=[],leaf=None):
@@ -50,7 +51,7 @@ class Program(Node):
 		Node.__init__(self,'Program',children,leaf)
 
  	def push(self,child):
-		self.children.append(child)
+		self.children = [child] + self.children
 		return self
 
 class Parameter(Node):
@@ -101,19 +102,31 @@ class ExprVar(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprVar',children,leaf)
 
+	def __str__(self,level):
+	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
+	  	ret = ret + " "*(level+1)+self.leaf.leaf+"\n"
+	  	ret = ret + " "*(level)+ ")" +"\n"
+	  	return ret
+
 class ExprConstNum(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprConstNum',children,leaf)
 	
 	def __str__(self,level):
-	  	ret = "\t"*level+ "(" +repr(self.typeNode)+"\n"
-	  	ret = ret + "\t"*(level+1)+repr(self.leaf)+"\n"
-	  	ret = ret + "\t"*(level)+ ")" +"\n"
+	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
+	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
+	  	ret = ret + " "*(level)+ ")" +"\n"
 	  	return ret
 
 class ExprConstBool(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprConstBool',children,leaf)
+	
+	def __str__(self,level):
+	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
+	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
+	  	ret = ret + " "*(level)+ ")" +"\n"
+	  	return ret
 
 class ExprVecMake(Node):
 	def __init__(self,children=[],leaf=None):
@@ -122,6 +135,12 @@ class ExprVecMake(Node):
 class ExprVecLength(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprVecLength',children,leaf)
+
+	def __str__(self,level):
+	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
+	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
+	  	ret = ret + " "*(level)+ ")" +"\n"
+	  	return ret
 
 class ExprVecDeref(Node):
 	def __init__(self,children=[],leaf=None):
