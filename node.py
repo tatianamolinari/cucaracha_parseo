@@ -90,9 +90,9 @@ class StmtReturn(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'StmtReturn',children,leaf)
 
-class StmtCall(Node):
+class ExprCall(Node):
 	def __init__(self,children=[],leaf=None):
-		Node.__init__(self,'StmtCall',children,leaf)
+		Node.__init__(self,'ExprCall',children,leaf)
 
 class StmtAssign(Node):
 	def __init__(self,children=[],leaf=None):

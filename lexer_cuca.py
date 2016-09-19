@@ -221,7 +221,7 @@ class Cuca(Parser):
   # StmtCall Id [ExprT]
   def p_call_stmt(self,p):
     ''' call_stmt : id LPAREN expressions_list RPAREN'''
-    p[0] = StmtCall(children=([p[1]]+p[3]))
+    p[0] = ExprCall(children=([p[1]]+p[3]))
 
   def p_instruction(self,p):
     ''' instruction : assing
