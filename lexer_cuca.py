@@ -79,7 +79,7 @@ class Cuca(Parser):
     return t
 
   t_ignore_COMMENT = r'\/\/.*'
-  print t_ignore_COMMENT
+
   t_ignore = " \t"
 
   precedence = (
@@ -301,7 +301,7 @@ class Cuca(Parser):
   # ExprNot ExprT
   def p_atomic_logic_expression_not(self, p):
     ''' atomic_logic_expression_not : NOT atomic_logic_expression'''
-    p[0] = ExprNot(p[2])
+    p[0] = ExprNot(children=[p[2]])
 
   def p_logic_expression(self, p): 
     ''' logic_expression  : binary_logic_expression
@@ -352,18 +352,17 @@ class Cuca(Parser):
 
 
   def p_atomic_expression_three(self, p):
-    ''' atomic_expression_three : LBRACK expressions_list RBRACK
-                                | LPAREN expression RPAREN '''
+    ''' atomic_expression_three : LPAREN expression RPAREN ''' #LBRACK expressions_list RBRACK
     p[0]=p[2]
 
 
-  def p_atomic_id_expression(self,p):
-    ''' atomic_id_expression : id LBRACK expression RBRACK'''
-    p[0]=[p[1],p[3]]
+  #def p_atomic_id_expression(self,p):
+  #  ''' atomic_id_expression : id LBRACK expression RBRACK'''
+  #  p[0]=[p[1],p[3]]
       
   def p_atomic_expression_list(self,p):
     ''' atomic_expression_list : LPAREN expressions_list RPAREN'''
-    p[0]=[p[1]] + p[3]
+    p[0]=p[2]
 
   def p_expr_var(self,p):
     ''' expr_var : id'''
@@ -383,18 +382,23 @@ class Cuca(Parser):
     p[0] = ExprVecLength(leaf=p[2])
 
   def p_vec_deref(self,p):
-    ''' vec_deref : id expression '''
-    p[0] = ExprVecDeref(children=[p[1],p[2]])
+    ''' vec_deref : id LBRACK expression RBRACK '''
+    p[0] = ExprVecDeref(children=[p[1],p[3]])
+
+  def p_vec_create(self,p):
+    ''' vec_create : LBRACK expressions_list RBRACK '''
+    p[0] = ExprVecMake(children=p[2])
     
   def p_atomic_expression(self, p):
     ''' atomic_expression : expr_var
                           | num
                           | bool
                           | vec_length
-                          | atomic_id_expression
+                          | vec_create
                           | atomic_expression_list
                           | atomic_expression_three 
-                          | vec_deref '''
+                          | vec_deref 
+                          | call_stmt'''
     p[0]= p[1] 
 
   def p_expression_group(self, p):

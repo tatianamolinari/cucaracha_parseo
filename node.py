@@ -13,13 +13,15 @@ class Node:
 
 	def __str__(self, level=0):
 		ret = "\t"*level+ "(" +repr(self.typeNode)+"\n"
-		print self.typeNode
+		#print self.typeNode
+		#print self.children
 	  	for child in self.children:
+	  		#print child
 	  		ret += child.__str__(level+1)
 	  	return ret
 
 	def __repr__(self):
-		return '<tree node representation>'
+		return self.typeNode + ' <tree node representation>'
 
 class Id(Node):
 	def __init__(self,children=[],leaf=None):
@@ -102,6 +104,7 @@ class ExprVar(Node):
 class ExprConstNum(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprConstNum',children,leaf)
+	
 	def __str__(self,level):
 	  	ret = "\t"*level+ "(" +repr(self.typeNode)+"\n"
 	  	ret = ret + "\t"*(level+1)+repr(self.leaf)+"\n"
