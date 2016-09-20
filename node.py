@@ -11,6 +11,12 @@ class Node:
 	  		self.children = [ ]
 	    	self.leaf = leaf
 
+	def isFunction(self):
+		return False
+
+	def equals(self,something):
+		return False
+
 	def __str__(self, level=0):
 		ret = " "*level+ "(" +str(self.typeNode)+"\n"
 		#print self.typeNode
@@ -38,6 +44,9 @@ class Type(Node):
 	def __str__(self,level=0):
 	  	return " "*level+str(self.leaf)+"\n"
 
+	def equals(self,something):
+		return self.leaf==something
+
 class Function(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'Function',children=children,leaf=leaf)
@@ -45,6 +54,16 @@ class Function(Node):
 	def push(self,child):
 		self.children.append(child)
 		return self
+	
+	def getName(self):
+		return self.children[0].leaf
+
+	def getType(self):
+		return self.children[1].leaf
+
+
+	def isFunction(self):
+		return True
 
 class Program(Node):
 	def __init__(self,children=[],leaf=None):

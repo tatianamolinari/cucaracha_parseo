@@ -163,7 +163,7 @@ class Cuca(Parser):
 
   def p_parameter(self, p):
     ''' parameter : id COLON type '''
-    p[0] = Parameter(children=(p[1],p[3]))
+    p[0] = Parameter(children=[p[1],p[3]])
 
 
 
