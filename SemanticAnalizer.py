@@ -26,11 +26,10 @@ class SemanticAnalizer:
 
 	def analizeProgram(self,program):
 		self.program = program	
-		self.program_functions = self.static_program_functions
+		self.program_functions = self.static_program_functions.copy()
 		self.completeProgramFunctions(program)
 		self.checkMainFunction()
 		self.checkFunctionVariables()
-		print self.program_functions
 
 	def completeProgramFunctions(self,node):
 		if node.isFunction():
@@ -49,25 +48,105 @@ class SemanticAnalizer:
 	
 	def checkMainFunction(self):
 		if 'main' in self.program_functions.keys():
-			if self.program_functions['main'].getType() != 'Unit':
+			mainFunction = self.program_functions['main']
+			if mainFunction.getType() != 'Unit':
 				print "Error: main function. Only can have Unit return type."
+			if len(mainFunction.getParameters()) != 0: 
+				print "Error: main function must not have any params."
 		else:
-			print "Error: Must exit a main function"
+			print "Error: Must exist a main function"
 
 	def checkFunctionVariables(self):
-		print "Prueba de identificacion de Blocks"
+
 		for function in self.program_functions.values():
-			self.function_variables = function.getParameters()
-			print "......................."
-			for child in function.children:
-				if child.isBlock():
-					for subchild in child.children:
-						if subchild.isStmtAssign():
-							self.function_variables[subchild.children[0].leaf] = subchild.children[1].getType()
-							print self.function_variables
-						else:
-							print subchild
-			print "......................."
+			dic_function = self.program_functions.copy()
+			dic_function.pop('main')
+			dic_function.update(function.getParameters())
+			typeFun = function.getType()
+			name = function.getName()
+			self.checkBlockFunction(function.getBlock(),typeFun,dic_function)
+
+
+	def updateValuesDic(self,dic1,dic2):
+		keys_dic1 = dic1.keys()
+		for key in dic2:
+			if key in keys_dic1:
+				dic1[key] = dic2[key]
+		return dic1
+
+
+	def checkBlockFunction(self,block,type_fun='Unit',vars_table={}):
+		copy_of_vars_table = vars_table.copy()
+		for instruction in block.children:
+
+			if instruction.isStmtAssign():
+				self.checkAssignStmt(instruction,copy_of_vars_table)
+				continue
+
+			if instruction.isCondtionStmt():
+				self.checkConditionStatment(instruction,copy_of_vars_table,type_fun)
+				continue
+
+			if instruction.isVecAssing():
+				self.checkVecAssing(instruction,copy_of_vars_table)
+				continue
+
+			if instruction.isCallStmt():
+				self.checkCallStmt(instruction,copy_of_vars_table)
+				continue
+
+			if instruction.isReturnStmt():
+				self.checkReturnStmt(instruction,copy_of_vars_table,type_fun)
+
+
+			print instruction
+
+	def checkCallStmt(self,instruction,vars_table):
+		instruction.getType(vars_table)
+
+	def checkReturnStmt(self,instruction,vars_table,type_fun):
+		return_type = instruction.getType(vars_table)
+		print instruction
+		if return_type!=type_fun:
+			print return_type 
+			print type_fun 
+			print "ERROR return type not match function type " + return_type +" "+ type_fun 
+
+	def checkAssignStmt(self,instruction,vars_table):
+		name = instruction.getName()
+		instruction_type = instruction.getType(vars_table)
+		if name in vars_table.keys():
+			existing_type = vars_table[name]
+			if existing_type != instruction_type:
+				print "Error "+ name + " already exists and has type " + existing_type +" not " + instruction_type
+		else:
+			vars_table[name] = instruction_type
+
+	def checkConditionStatment(self,instruction,vars_table,type_fun):
+		conditionType = instruction.getCondition().getType(table)
+		if not conditionType == 'Bool':
+			print "Error statement condition must be a bool"
+		blocks = instruction.getBlocks()
+		for block in blocks:
+			self.checkBlockFunction(block,type_fun,vars_table=vars_table)
+
+	def checkVecAssing(self,instruction,vars_table):
+		name = instruction.getName()
+		if name in vars_table.keys():
+			if vars_table[name] != 'Vec':
+				print "Error " + name + " is not a Vec" 
+		else:
+			print "Error the variable " + name + " must be already defined and be a vector"
+				
+		index = instruction.getIntExpression()
+		if index.getType(table) != 'Int': 
+			print "Error the index expression must be an integer"
+				
+		value = instruction.getValueExpression()
+		if value.getType(table) != 'Int': 
+			print "Error the value expression to save in a vec must be an integer"
+
+
 
 
 
