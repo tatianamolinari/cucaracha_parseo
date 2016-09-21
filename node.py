@@ -17,6 +17,18 @@ class Node:
 	def equals(self,something):
 		return False
 
+	def isBlock(self):
+		return False
+
+	def isStmtAssign(self):
+		return False
+
+	def isParameter(self):
+		return False
+
+	def getType(self):
+		return None
+
 	def __str__(self, level=0):
 		ret = " "*level+ "(" +str(self.typeNode)+"\n"
 		#print self.typeNode
@@ -61,6 +73,12 @@ class Function(Node):
 	def getType(self):
 		return self.children[1].leaf
 
+	def getParameters(self):
+		params = {}
+		for child in self.children:
+			if child.isParameter():
+				params[child.children[0].leaf] = child.children[1].leaf
+		return params
 
 	def isFunction(self):
 		return True
@@ -81,13 +99,22 @@ class Parameter(Node):
 		self.children.append(child)
 		return self
 
+	def isParameter(self):
+		return True
+
 class Block(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'Block',children,leaf)
 
+	def isBlock(self):
+		return True
+
 class StmtAssign(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'StmtAssign',children,leaf)
+
+	def isStmtAssign(self):
+		return True
 
 class StmtVecAssign(Node):
 	def __init__(self,children=[],leaf=None):
@@ -113,15 +140,11 @@ class ExprCall(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprCall',children,leaf)
 
-class StmtAssign(Node):
-	def __init__(self,children=[],leaf=None):
-		Node.__init__(self,'StmtAssign',children,leaf)
-
 class ExprVar(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprVar',children,leaf)
 
-	def __str__(self,level):
+	def __str__(self,level=0):
 	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
 	  	ret = ret + " "*(level+1)+self.leaf.leaf+"\n"
 	  	ret = ret + " "*(level)+ ")" +"\n"
@@ -131,21 +154,27 @@ class ExprConstNum(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprConstNum',children,leaf)
 	
-	def __str__(self,level):
+	def __str__(self,level=0):
 	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
 	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
 	  	ret = ret + " "*(level)+ ")" +"\n"
 	  	return ret
 
+	def getType(self):
+		return 'Int'
+
 class ExprConstBool(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprConstBool',children,leaf)
 	
-	def __str__(self,level):
+	def __str__(self,level=0):
 	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
 	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
 	  	ret = ret + " "*(level)+ ")" +"\n"
 	  	return ret
+
+	def getType(self):
+		return 'Bool'
 
 class ExprVecMake(Node):
 	def __init__(self,children=[],leaf=None):
@@ -155,7 +184,7 @@ class ExprVecLength(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprVecLength',children,leaf)
 
-	def __str__(self,level):
+	def __str__(self,level=0):
 	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
 	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
 	  	ret = ret + " "*(level)+ ")" +"\n"
@@ -173,13 +202,31 @@ class ExprAnd(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprAnd',children,leaf)
 
+	def getType(self):
+		if(self.children[0].getType() == "Bool" and self.children[1].getType() == "Bool"):
+			return 'Bool'
+		else:
+			return None
+
 class ExprOr(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprOr',children,leaf)
 
+	def getType(self):
+		if(self.children[0].getType() == "Bool" and self.children[1].getType() == "Bool"):
+			return 'Bool'
+		else:
+			return None
+
 class ExprNot(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprNot',children,leaf)
+
+	def getType(self):
+		if(self.children[0].getType() == "Bool"):
+			return 'Bool'
+		else:
+			return None
 
 class ExprLe(Node):
 	def __init__(self,children=[],leaf=None):

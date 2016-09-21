@@ -9,23 +9,24 @@ if __name__ == "__main__":
 
   cuca = Cuca()
   data = '''
-fun f() : Int {
-  return 1
+fun f( e : Bool, t : Int) : Int {
+  a := not( True or False)
+  return a + y
 }
 
-fun g(x : Int) : Int {
-  return x
+fun w(a : Int) : Int {
+  return a
 }
 
-fun h(x : Int, y : Int) : Int {
-  return x + y
+fun h(b : Int, c : Int) : Int {
+  return b + c
 }
 
-fun i(x : Int, y : Int, z : Int) : Int {
-  return x * y * z
+fun i(d : Int, e : Int, f : Int) : Int {
+  return d * e * f
 }
 
-fun betav(x:Bool, y:Bool) : Vec {
+fun betav(g:Bool, h:Bool) : Bool {
   if x and y {
     z := 1
   } else {
@@ -43,6 +44,7 @@ fun main() {
   #cuca.lexer.input(data)
   sa = SemanticAnalizer()
   program = cuca.yacc.parse(data)
+  #print program
   sa.analizeProgram(program)
  # Tokenize
  # while True:
