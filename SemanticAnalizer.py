@@ -1,12 +1,9 @@
 import sys, os
 sys.path.insert(0,"../..")
 from node import *
+from semantic_exceptions import *
 
 class SemanticAnalizer:
-
-
-	#data FunctionT :: = Function Id Type [ParameterT] BlockT
-	#data ParameterT :: = Parameter Id Type
 
 	def __init__(self):
 		
@@ -27,9 +24,12 @@ class SemanticAnalizer:
 	def analizeProgram(self,program):
 		self.program = program	
 		self.program_functions = self.static_program_functions.copy()
-		self.completeProgramFunctions(program)
-		self.checkMainFunction()
-		self.checkFunctionVariables()
+		try:
+			self.completeProgramFunctions(program)
+			self.checkMainFunction()
+			self.checkFunctionVariables()
+		except Error as e:
+			print e
 
 	def completeProgramFunctions(self,node):
 		if node.isFunction():
@@ -37,11 +37,11 @@ class SemanticAnalizer:
 			typee = node.getType()
 			if not name in self.program_functions.keys():
 				if typee=='Vec':
-					print "Error: Function cannot return Vec type"
+					raise TypeError("Error: Function cannot return Vec type")
 				else:
 					self.program_functions[name] = node
 			else:
-				print "Error: Function already defined - " + name
+				raise AlreadyDefinedError("Error: Function already defined - " + name)
 		else: 
 			for child in node.children:
 				self.completeProgramFunctions(child)
@@ -50,11 +50,11 @@ class SemanticAnalizer:
 		if 'main' in self.program_functions.keys():
 			mainFunction = self.program_functions['main']
 			if mainFunction.getType() != 'Unit':
-				print "Error: main function. Only can have Unit return type."
+				raise TypeError("Error: main function. Only can have Unit return type.")
 			if len(mainFunction.getParameters()) != 0: 
-				print "Error: main function must not have any params."
+				raise Error("Error: main function must not have any params.")
 		else:
-			print "Error: Must exist a main function"
+			raise Error("Error: Must exist a main function")
 
 	def checkFunctionVariables(self):
 
@@ -73,7 +73,6 @@ class SemanticAnalizer:
 			if key in keys_dic1:
 				dic1[key] = dic2[key]
 		return dic1
-
 
 	def checkBlockFunction(self,block,type_fun='Unit',vars_table={}):
 		copy_of_vars_table = vars_table.copy()
@@ -97,7 +96,7 @@ class SemanticAnalizer:
 
 			if instruction.isReturnStmt():
 				self.checkReturnStmt(instruction,copy_of_vars_table,type_fun)
-
+				continue
 
 			print instruction
 
@@ -106,11 +105,8 @@ class SemanticAnalizer:
 
 	def checkReturnStmt(self,instruction,vars_table,type_fun):
 		return_type = instruction.getType(vars_table)
-		print instruction
-		if return_type!=type_fun:
-			print return_type 
-			print type_fun 
-			print "ERROR return type not match function type " + return_type +" "+ type_fun 
+		if return_type != type_fun:
+			raise TypeError("ERROR return type not match function type " + return_type +" "+ type_fun) 
 
 	def checkAssignStmt(self,instruction,vars_table):
 		name = instruction.getName()
@@ -118,14 +114,14 @@ class SemanticAnalizer:
 		if name in vars_table.keys():
 			existing_type = vars_table[name]
 			if existing_type != instruction_type:
-				print "Error "+ name + " already exists and has type " + existing_type +" not " + instruction_type
+				raise TypeError("Error "+ name + " already exists and has type " + existing_type +" not " + instruction_type)
 		else:
 			vars_table[name] = instruction_type
 
 	def checkConditionStatment(self,instruction,vars_table,type_fun):
-		conditionType = instruction.getCondition().getType(table)
+		conditionType = instruction.getCondition().getType(vars_table)
 		if not conditionType == 'Bool':
-			print "Error statement condition must be a bool"
+			raise TypeError("Error statement condition must be a bool")
 		blocks = instruction.getBlocks()
 		for block in blocks:
 			self.checkBlockFunction(block,type_fun,vars_table=vars_table)
@@ -134,17 +130,17 @@ class SemanticAnalizer:
 		name = instruction.getName()
 		if name in vars_table.keys():
 			if vars_table[name] != 'Vec':
-				print "Error " + name + " is not a Vec" 
+				raise TypeError("Error " + name + " is not a Vec") 
 		else:
-			print "Error the variable " + name + " must be already defined and be a vector"
+			raise NotDefinedError("Error the variable " + name + " must be already defined and be a vector")
 				
 		index = instruction.getIntExpression()
-		if index.getType(table) != 'Int': 
-			print "Error the index expression must be an integer"
+		if index.getType(vars_table) != 'Int': 
+			raise TypeError("Error the index expression must be an integer")
 				
 		value = instruction.getValueExpression()
-		if value.getType(table) != 'Int': 
-			print "Error the value expression to save in a vec must be an integer"
+		if value.getType(vars_table) != 'Int': 
+			raise TypeError("Error the value expression to save in a vec must be an integer")
 
 
 

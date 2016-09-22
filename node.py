@@ -1,5 +1,6 @@
 import sys, os
 sys.path.insert(0,"../..")
+from semantic_exceptions import *
 
 class Node:
 
@@ -43,10 +44,7 @@ class Node:
 
 	def __str__(self, level=0):
 		ret = " "*level+ "(" +str(self.typeNode)+"\n"
-		#print self.typeNode
-		#print self.children
 	  	for child in self.children:
-	  		#print child
 	  		ret += child.__str__(level+1)
 	  	ret += " "*level+ ") \n"
 	  	return ret
@@ -66,7 +64,7 @@ class Id(Node):
 		if name in table.keys():
 			return table[name]
 		else:
-			print "ERROR " + name + "is not defined"
+			raise NotDefinedError("ERROR " + name + " is not defined")
 
 class Type(Node):
 	def __init__(self,children=[],leaf=None):
@@ -227,7 +225,7 @@ class ExprVar(Node):
 		if name in table.keys():
 			return table[name]
 		else:
-			print "ERROR " + name + "is not defined"
+			raise NotDefinedError("ERROR " + name + " is not defined")
 
 class ExprConstNum(Node):
 	def __init__(self,children=[],leaf=None):
@@ -260,10 +258,10 @@ class ExprVecMake(Node):
 		Node.__init__(self,'ExprVecMake',children,leaf)
 
 	def getType(self,table={}):
-		for exp in children:
+		for exp in self.children:
 			exp_type = exp.getType(table)
 			if exp_type != 'Int':
-				print "ERROR vectors only supports int values"
+				raise TypeError("ERROR vectors only supports int values")
 		return 'Vec'
 
 class ExprVecLength(Node):
@@ -278,25 +276,25 @@ class ExprVecLength(Node):
 
 	def getType(self,table={}):
 		name = self.leaf
-		if name in vars_table.keys():
-			if vars_table[name] != 'Vec':
-				print "Error " + name + " must be a vect to express vector lenght by #name" 
+		if name in table.keys():
+			if table[name] != 'Vec':
+				raise TypeError("Error " + name + " must be a vect to express vector lenght by #name") 
 			return 'Int'
 		else:
-			print "ERROR " + name + " of vector is not defined"
+			raise NotDefinedError("ERROR " + name + " vector is not defined")
 
 class ExprVecDeref(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprVecDeref',children,leaf)
 
 	def getType(self,table={}):
-		name = self.leaf
-		if name in vars_table.keys():
-			if vars_table[name] != 'Vec':
-				print "Error " + name + " must be a vect to access values by index" 
+		name = self.children[0].leaf
+		if name in table.keys():
+			if table[name] != 'Vec':
+				raise TypeError("Error " + name + " must be a vect to access values by index") 
 			return 'Int'
 		else:
-			print "ERROR " + name + " of vector is not defined"
+			raise NotDefinedError("ERROR " + name + " vector is not defined")
 
 class ExprCall(Node):
 	def __init__(self,children=[],leaf=None):
@@ -322,13 +320,13 @@ class ExprCall(Node):
 			function_params_num = len(function_params)
 			params_expressions_num = len(params_expressions_call)
 			if function_params_num != params_expressions_num:
-				print "ERROR function " + name + " expected " + str(function_params_num) + " recived " + str(params_expressions_num)
-			for i in range(0, function_params_num-1):
+				raise TypeError("ERROR function " + name + " expected " + str(function_params_num) + " recived " + str(params_expressions_num) )
+			for i in range(0, function_params_num):
 				if function_params[i] != params_expressions_call[i].getType(table):
-					print "ERROR params type does not match"
+					raise TypeError("ERROR params type does not match")
 			return function.getType(table)
 		else:
-			print "ERROR function " + name + " is not defined"
+			raise NotDefinedError("ERROR function " + name + " is not defined")
 		
 
 class BinaryBooleanExpression(Node):
@@ -336,7 +334,7 @@ class BinaryBooleanExpression(Node):
 		if(self.children[0].getType(table) == "Bool" and self.children[1].getType(table) == "Bool"):
 			return 'Bool'
 		else:
-			print "ERROR expected two booleans"
+			raise TypeError("ERROR expected two booleans")
 			return None
 
 class ExprAnd(BinaryBooleanExpression):
@@ -364,7 +362,7 @@ class BinaryIntExpression(Node):
 		if(self.children[0].getType(table) == "Int" and self.children[1].getType(table) == "Int"):
 			return 'Bool'
 		else:
-			print "ERROR expected two integers"
+			raise TypeError("ERROR expected two integers")
 			return None
 
 
@@ -403,7 +401,7 @@ class BinaryIntAritmeticExpression(Node):
 		if(self.children[0].getType(table) == "Int" and self.children[1].getType(table) == "Int"):
 			return 'Int'
 		else:
-			print "ERROR expected two integers"
+			raise TypeError("ERROR expected two integers")
 			return None
 
 class ExprAdd(BinaryIntAritmeticExpression):

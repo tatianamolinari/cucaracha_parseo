@@ -9,13 +9,14 @@ if __name__ == "__main__":
 
   cuca = Cuca()
   data = '''
-fun f( e : Bool, t : Int) : Int {
-  a := 1
-  return a + t
+fun g(i : Bool){
+	
 }
 
 fun main() {
-f(True,8)
+  
+  x := g(#ha)
+  
 }
 
 '''
