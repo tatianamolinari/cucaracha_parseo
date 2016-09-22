@@ -22,6 +22,7 @@ class SemanticAnalizer:
 
 
 	def analizeProgram(self,program):
+		print "------------------------------- Semantic Analize check ------------------------------- "
 		self.program = program	
 		self.program_functions = self.static_program_functions.copy()
 		try:
@@ -30,6 +31,11 @@ class SemanticAnalizer:
 			self.checkFunctionVariables()
 		except Error as e:
 			print e
+			return None
+
+		print  "Success Semantic Analize done"	
+
+		print "-------------------------------------------------------------------------------------- " 
 
 	def completeProgramFunctions(self,node):
 		if node.isFunction():
