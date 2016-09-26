@@ -80,7 +80,7 @@ class SemanticAnalizer:
 				dic1[key] = dic2[key]
 		return dic1
 
-	def checkBlockFunction(self,block,type_fun='Unit',vars_table={}, haveReturnStatement=False):
+	def checkBlockFunction(self,block,type_fun='Unit',vars_table={}):
 		copy_of_vars_table = vars_table.copy()
 		haveReturnStatement = False
 		for instruction in block.children:
@@ -111,8 +111,9 @@ class SemanticAnalizer:
 				continue
 
 			print instruction
+
 		if type_fun != 'Unit' and not haveReturnStatement:
-			raise Error("Error. Function must have one 'return' statement")
+			raise Error("Error. Function type " + type_fun + " must have a 'return' statement")
 
 	def checkCallStmt(self,instruction,vars_table):
 		instruction.getType(vars_table)
@@ -140,7 +141,7 @@ class SemanticAnalizer:
 			raise TypeError("Error statement condition must be a bool")
 		blocks = instruction.getBlocks()
 		for block in blocks:
-			self.checkBlockFunction(block,type_fun,vars_table=vars_table)
+			self.checkBlockFunction(block,"Unit",vars_table=vars_table)
 
 	def checkVecAssing(self,instruction,vars_table):
 		name = instruction.getName()
@@ -148,7 +149,7 @@ class SemanticAnalizer:
 			if vars_table[name] != 'Vec':
 				raise TypeError("Error " + name + " is not a Vec")
 			else:
-				typeToAssign = instruction.children[2].getType()
+				typeToAssign = instruction.children[2].getType(vars_table)
 				if typeToAssign != 'Int':
 					raise TypeError("Error. " + name + " Vec, cant set a " + typeToAssign + " type value")
 		else:

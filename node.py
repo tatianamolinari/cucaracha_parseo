@@ -292,7 +292,7 @@ class ExprVecDeref(Node):
 		if name in table.keys():
 			if table[name] != 'Vec':
 				raise TypeError("Error " + name + " must be a vect to access values by index")
-			indexType = self.children[1].getType()
+			indexType = self.children[1].getType(table)
 			if indexType != 'Int':
 				raise TypeError("Error. " + name + " parameter cant be " + indexType + " type")
 			return 'Int'
