@@ -80,8 +80,9 @@ class SemanticAnalizer:
 				dic1[key] = dic2[key]
 		return dic1
 
-	def checkBlockFunction(self,block,type_fun='Unit',vars_table={}):
+	def checkBlockFunction(self,block,type_fun='Unit',vars_table={}, haveReturnStatement=False):
 		copy_of_vars_table = vars_table.copy()
+		haveReturnStatement = False
 		for instruction in block.children:
 
 			if instruction.isStmtAssign():
@@ -101,10 +102,17 @@ class SemanticAnalizer:
 				continue
 
 			if instruction.isReturnStmt():
+				if type_fun == 'Unit':
+					raise TypeError("Error. 'return' statement in Unit type function")
+				if haveReturnStatement:
+					raise Error("Error. Function must have only one 'return' statement")
+				haveReturnStatement = True
 				self.checkReturnStmt(instruction,copy_of_vars_table,type_fun)
 				continue
 
 			print instruction
+		if type_fun != 'Unit' and not haveReturnStatement:
+			raise Error("Error. Function must have one 'return' statement")
 
 	def checkCallStmt(self,instruction,vars_table):
 		instruction.getType(vars_table)
@@ -112,11 +120,13 @@ class SemanticAnalizer:
 	def checkReturnStmt(self,instruction,vars_table,type_fun):
 		return_type = instruction.getType(vars_table)
 		if return_type != type_fun:
-			raise TypeError("ERROR return type not match function type " + return_type +" "+ type_fun) 
+			raise TypeError("Error. return type not match function type " + return_type +" "+ type_fun) 
 
 	def checkAssignStmt(self,instruction,vars_table):
 		name = instruction.getName()
 		instruction_type = instruction.getType(vars_table)
+		if instruction_type == 'Unit':
+			raise TypeError("Error. Cant assign " + instruction_type + " type of " + instruction.children[1].getName() + " function ")
 		if name in vars_table.keys():
 			existing_type = vars_table[name]
 			if existing_type != instruction_type:
@@ -136,7 +146,11 @@ class SemanticAnalizer:
 		name = instruction.getName()
 		if name in vars_table.keys():
 			if vars_table[name] != 'Vec':
-				raise TypeError("Error " + name + " is not a Vec") 
+				raise TypeError("Error " + name + " is not a Vec")
+			else:
+				typeToAssign = instruction.children[2].getType()
+				if typeToAssign != 'Int':
+					raise TypeError("Error. " + name + " Vec, cant set a " + typeToAssign + " type value")
 		else:
 			raise NotDefinedError("Error the variable " + name + " must be already defined and be a vector")
 				

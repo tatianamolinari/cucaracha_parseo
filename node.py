@@ -43,10 +43,10 @@ class Node:
 		return None
 
 	def __str__(self, level=0):
-		ret = " "*level+ "(" +str(self.typeNode)+"\n"
+		ret = "  "*level+ "(" +str(self.typeNode)+"\n"
 	  	for child in self.children:
 	  		ret += child.__str__(level+1)
-	  	ret += " "*level+ ") \n"
+	  	ret += "  "*level+ ") \n"
 	  	return ret
 
 	def __repr__(self):
@@ -57,7 +57,7 @@ class Id(Node):
 		Node.__init__(self,'Id',children,leaf)
 
 	def __str__(self,level=0):
-	  	return " "*level+str(self.leaf)+"\n"
+	  	return "  "*level+str(self.leaf)+"\n"
 
 	def getType(self,table={}):
 		name = self.leaf
@@ -71,7 +71,7 @@ class Type(Node):
 		Node.__init__(self,'Type',children,leaf)
 
 	def __str__(self,level=0):
-	  	return " "*level+str(self.leaf)+"\n"
+	  	return "  "*level+str(self.leaf)+"\n"
 
 	def equals(self,something):
 		return self.leaf==something
@@ -215,9 +215,9 @@ class ExprVar(Node):
 		Node.__init__(self,'ExprVar',children,leaf)
 
 	def __str__(self,level=0):
-	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
-	  	ret = ret + " "*(level+1)+self.leaf.leaf+"\n"
-	  	ret = ret + " "*(level)+ ")" +"\n"
+	  	ret = "  "*level+ "(" +str(self.typeNode)+"\n"
+	  	ret = ret + "  "*(level+1)+self.leaf.leaf+"\n"
+	  	ret = ret + "  "*(level)+ ")" +"\n"
 	  	return ret
 
 	def getType(self,table={}):
@@ -232,9 +232,9 @@ class ExprConstNum(Node):
 		Node.__init__(self,'ExprConstNum',children,leaf)
 	
 	def __str__(self,level=0):
-	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
-	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
-	  	ret = ret + " "*(level)+ ")" +"\n"
+	  	ret = "  "*level+ "(" +str(self.typeNode)+"\n"
+	  	ret = ret + "  "*(level+1)+str(self.leaf)+"\n"
+	  	ret = ret + "  "*(level)+ ")" +"\n"
 	  	return ret
 
 	def getType(self,table={}):
@@ -245,9 +245,9 @@ class ExprConstBool(Node):
 		Node.__init__(self,'ExprConstBool',children,leaf)
 	
 	def __str__(self,level=0):
-	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
-	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
-	  	ret = ret + " "*(level)+ ")" +"\n"
+	  	ret = "  "*level+ "(" +str(self.typeNode)+"\n"
+	  	ret = ret + "  "*(level+1)+str(self.leaf)+"\n"
+	  	ret = ret + "  "*(level)+ ")" +"\n"
 	  	return ret
 
 	def getType(self,table={}):
@@ -269,9 +269,9 @@ class ExprVecLength(Node):
 		Node.__init__(self,'ExprVecLength',children,leaf)
 
 	def __str__(self,level=0):
-	  	ret = " "*level+ "(" +str(self.typeNode)+"\n"
-	  	ret = ret + " "*(level+1)+str(self.leaf)+"\n"
-	  	ret = ret + " "*(level)+ ")" +"\n"
+	  	ret = "  "*level+ "(" +str(self.typeNode)+"\n"
+	  	ret = ret + "  "*(level+1)+str(self.leaf)+"\n"
+	  	ret = ret + "  "*(level)+ ")" +"\n"
 	  	return ret
 
 	def getType(self,table={}):
@@ -291,7 +291,10 @@ class ExprVecDeref(Node):
 		name = self.children[0].leaf
 		if name in table.keys():
 			if table[name] != 'Vec':
-				raise TypeError("Error " + name + " must be a vect to access values by index") 
+				raise TypeError("Error " + name + " must be a vect to access values by index")
+			indexType = self.children[1].getType()
+			if indexType != 'Int':
+				raise TypeError("Error. " + name + " parameter cant be " + indexType + " type")
 			return 'Int'
 		else:
 			raise NotDefinedError("ERROR " + name + " vector is not defined")
