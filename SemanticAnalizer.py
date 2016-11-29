@@ -72,7 +72,6 @@ class SemanticAnalizer:
 			name = function.getName()
 			self.checkBlockFunction(function.getBlock(),typeFun,dic_function)
 
-
 	def updateValuesDic(self,dic1,dic2):
 		keys_dic1 = dic1.keys()
 		for key in dic2:
@@ -101,6 +100,10 @@ class SemanticAnalizer:
 				self.checkCallStmt(instruction,copy_of_vars_table)
 				continue
 
+			if instruction.isCallExpr():
+				self.checkCallStmt(instruction,copy_of_vars_table)
+				continue
+
 			if instruction.isReturnStmt():
 				if type_fun == 'Unit':
 					raise TypeError("Error. 'return' statement in Unit type function")
@@ -116,6 +119,8 @@ class SemanticAnalizer:
 			raise Error("Error. Function type " + type_fun + " must have a 'return' statement")
 
 	def checkCallStmt(self,instruction,vars_table):
+		print instruction.isCallStmt()
+		print instruction.isCallExpr()
 		instruction.getType(vars_table)
 
 	def checkReturnStmt(self,instruction,vars_table,type_fun):

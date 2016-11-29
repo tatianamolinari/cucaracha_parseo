@@ -388,6 +388,11 @@ class Cuca(Parser):
   def p_vec_create(self,p):
     ''' vec_create : LBRACK expressions_list RBRACK '''
     p[0] = ExprVecMake(children=p[2])
+
+  # ExprCall Id [ExprT]
+  def p_call_expr(self,p):
+    ''' call_expr : id LPAREN expressions_list RPAREN'''
+    p[0] = StmtCall(children=([p[1]]+p[3]))
     
   def p_atomic_expression(self, p):
     ''' atomic_expression : expr_var
@@ -398,7 +403,7 @@ class Cuca(Parser):
                           | atomic_expression_list
                           | atomic_expression_three 
                           | vec_deref 
-                          | call_stmt'''
+                          | call_expr'''
     p[0]= p[1] 
 
   def p_expression_group(self, p):
