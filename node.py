@@ -33,6 +33,9 @@ class Node:
 	def isCallStmt(self):
 		return False
 
+	def isCallExpr(self):
+		return False
+
 	def isReturnStmt(self):
 		return False
 
@@ -41,6 +44,9 @@ class Node:
 
 	def getType(self,table={}):
 		return None
+
+	def getAssembler(self):
+		return ""
 
 	def __str__(self, level=0):
 		ret = "  "*level+ "(" +str(self.typeNode)+"\n"
@@ -113,6 +119,22 @@ class Function(Node):
 	def isFunction(self):
 		return True
 
+	def getLocalVariables(self):
+		localVariables = {}
+		self.getBlock().getLocalVariables(localVariables)
+		for parameter in self.getParameters():
+			if localVariables.get(parameter):
+				localVariables.pop(parameter)
+		return localVariables
+
+	def getAssembler(self): 
+		c_code = "cuca_" + self.getName() + ":\n" + "push rbp\n" + "mov rbp , rsp\n"
+		cant_variables = len(self.getLocalVariables())
+		if cant_variables != 0:
+			c_code = c_code + "sub rsp, " + str(8*cant_variables) + "\n"
+		
+		return c_code
+
 class Program(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'Program',children,leaf)
@@ -138,6 +160,12 @@ class Block(Node):
 	def isBlock(self):
 		return True
 
+	def getLocalVariables(self, localVariables={}):
+		for inst in self.children:
+			inst.getLocalVariables(localVariables)
+		return localVariables
+
+
 class StmtAssign(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'StmtAssign',children,leaf)
@@ -150,6 +178,13 @@ class StmtAssign(Node):
 
 	def isStmtAssign(self):
 		return True
+
+	def getLocalVariables(self, localVariables={}):
+		localVariables[self.getName()] = self
+
+	def getAssembler(self):
+		return self.children[1].getAssembler()
+
 
 class StmtVecAssign(Node):
 	def __init__(self,children=[],leaf=None):
@@ -170,6 +205,9 @@ class StmtVecAssign(Node):
 	def isVecAssing(self):
 		return True
 
+	def getLocalVariables(self, localVariables={}):
+		sasa = "" #todo
+
 
 class ConditionStmt(Node):
 	
@@ -182,11 +220,13 @@ class ConditionStmt(Node):
 	def getBlocks(self):
 		return [self.children[1]]
 
+	def getLocalVariables(self, localVariables={}):
+		for block in self.getBlocks():
+			block.getLocalVariables(localVariables)
 
 class StmtIf(ConditionStmt):
 	def __init__(self,children=[],leaf=None):
 		ConditionStmt.__init__(self,'StmtIf',children,leaf)
-
 
 class StmtIfElse(ConditionStmt):
 	def __init__(self,children=[],leaf=None):
@@ -199,7 +239,6 @@ class StmtWhile(ConditionStmt):
 	def __init__(self,children=[],leaf=None):
 		ConditionStmt.__init__(self,'StmtWhile',children,leaf)
 
-
 class StmtReturn(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'StmtReturn',children,leaf)
@@ -209,6 +248,9 @@ class StmtReturn(Node):
 
 	def isReturnStmt(self):
 		return True
+
+	def getLocalVariables(self, localVariables={}):
+		return ""
 
 class ExprVar(Node):
 	def __init__(self,children=[],leaf=None):
@@ -230,6 +272,9 @@ class ExprVar(Node):
 class ExprConstNum(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprConstNum',children,leaf)
+
+	def getAssembler(self):
+		return "mov rdi, " + str(self.leaf) + "\n"
 	
 	def __str__(self,level=0):
 	  	ret = "  "*level+ "(" +str(self.typeNode)+"\n"
@@ -252,6 +297,14 @@ class ExprConstBool(Node):
 
 	def getType(self,table={}):
 		return 'Bool'
+
+	def getAssembler(self):
+		c_code = ""
+		if self.leaf == "True":
+			c_code = "mov rsi, -1\n"
+		else:
+			c_code = "mov rdi, 0\n"
+		return c_code
 
 class ExprVecMake(Node):
 	def __init__(self,children=[],leaf=None):
@@ -299,9 +352,9 @@ class ExprVecDeref(Node):
 		else:
 			raise NotDefinedError("ERROR " + name + " vector is not defined")
 
-class ExprCall(Node):
+class StmtCall(Node):
 	def __init__(self,children=[],leaf=None):
-		Node.__init__(self,'ExprCall',children,leaf)
+		Node.__init__(self,'StmtCall',children,leaf)
 
 	def getName(self):
 		return self.children[0].leaf
@@ -312,7 +365,6 @@ class ExprCall(Node):
 
 	def isCallStmt(self):
 		return True
-
 
 	def getType(self,table={}):
 		name = self.getName()
@@ -330,7 +382,40 @@ class ExprCall(Node):
 			return function.getType(table)
 		else:
 			raise NotDefinedError("ERROR function " + name + " is not defined")
-		
+
+class ExprCall(Node):
+	def __init__(self,children=[],leaf=None):
+		Node.__init__(self,'ExprCall',children,leaf)
+
+	def getName(self):
+		return self.children[0].leaf
+
+	def getParametersExpressions(self):
+		params_expressions = self.children[1:]
+		return params_expressions
+
+	def isCallExpr(self):
+		return True
+
+	def getType(self,table={}):
+		name = self.getName()
+		if name in table.keys():
+			function = table[name]
+			function_params = function.getParametersTypes()
+			params_expressions_call = self.getParametersExpressions()
+			function_params_num = len(function_params)
+			params_expressions_num = len(params_expressions_call)
+			if function_params_num != params_expressions_num:
+				raise TypeError("ERROR function " + name + " expected " + str(function_params_num) + " recived " + str(params_expressions_num) )
+			for i in range(0, function_params_num):
+				if function_params[i] != params_expressions_call[i].getType(table):
+					raise TypeError("ERROR params type does not match")
+			return function.getType(table)
+		else:
+			raise NotDefinedError("ERROR function " + name + " is not defined")
+
+	def getLocalVariables(self, localVariables={}):
+		return ""
 
 class BinaryBooleanExpression(Node):
 	def getType(self,table={}):
