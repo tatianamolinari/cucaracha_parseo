@@ -45,7 +45,10 @@ class Node:
 	def getType(self,table={}):
 		return None
 
-	def getAssembler(self):
+	def isBinaryIntAritmeticExpression(self):
+		return False
+
+	def getAssembler(self,complier):
 		return ""
 
 	def __str__(self, level=0):
@@ -109,6 +112,15 @@ class Function(Node):
 				params[child.children[0].leaf] = child.children[1].leaf
 		return params
 
+	def getParametersWithIndex(self):
+		i = 0
+		params = {}
+		for child in self.children:
+			if child.isParameter():
+				params[child.children[0].leaf] = i
+				i=i+1
+		return params
+
 	def getParametersTypes(self):
 		params = []
 		for child in self.children:
@@ -127,7 +139,7 @@ class Function(Node):
 				localVariables.pop(parameter)
 		return localVariables
 
-	def getAssembler(self): 
+	def getAssembler(self,compiler): 
 		c_code = "cuca_" + self.getName() + ":\n" + "push rbp\n" + "mov rbp , rsp\n"
 		cant_variables = len(self.getLocalVariables())
 		if cant_variables != 0:
@@ -182,8 +194,8 @@ class StmtAssign(Node):
 	def getLocalVariables(self, localVariables={}):
 		localVariables[self.getName()] = self
 
-	def getAssembler(self):
-		return self.children[1].getAssembler()
+	def getAssembler(self,compiler):
+		return self.children[1].getAssembler(compiler)
 
 
 class StmtVecAssign(Node):
@@ -273,7 +285,8 @@ class ExprConstNum(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprConstNum',children,leaf)
 
-	def getAssembler(self):
+	def getAssembler(self,compiler):
+		register = compiler.takeRegister()
 		return "mov rdi, " + str(self.leaf) + "\n"
 	
 	def __str__(self,level=0):
@@ -284,6 +297,8 @@ class ExprConstNum(Node):
 
 	def getType(self,table={}):
 		return 'Int'
+
+	  
 
 class ExprConstBool(Node):
 	def __init__(self,children=[],leaf=None):
@@ -298,10 +313,10 @@ class ExprConstBool(Node):
 	def getType(self,table={}):
 		return 'Bool'
 
-	def getAssembler(self):
+	def getAssembler(self,compiler):
 		c_code = ""
 		if self.leaf == "True":
-			c_code = "mov rsi, -1\n"
+			c_code = "mov rdi, -1\n"
 		else:
 			c_code = "mov rdi, 0\n"
 		return c_code
@@ -491,6 +506,14 @@ class BinaryIntAritmeticExpression(Node):
 		else:
 			raise TypeError("ERROR expected two integers")
 			return None
+	def getAssembler(self,compiler):
+		 
+		#r1 = compiler.takeRegister(self)
+		#assembler =
+		return "mov rdi, " + str(self.leaf) + "\n"
+	def isBinaryIntAritmeticExpression(self):
+		return True
+
 
 class ExprAdd(BinaryIntAritmeticExpression):
 	def __init__(self,children=[],leaf=None):
