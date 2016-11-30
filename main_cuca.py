@@ -51,14 +51,42 @@ fun main() {
 }
  '''
 
+data = ''' 
 
-	sa = SemanticAnalizer()
-	program = cuca.yacc.parse(data)
-	print "------------------------------- AST from input program ------------------------------- "
-	print program
-	  
-	sa.analizeProgram(program)
+fun expres(i : Int) {
+  i := (2 + 1) * 2
+  a := True and False
+}
 
- 	cucaracha_compiler = CucarachaCompiler()
- 	cucaracha_compiler.cuca_compile(program)
+
+fun main() {
+  expres(3)
+}
+ '''
+
+data = ''' 
+
+fun expres(i : Int) {
+  if(i<1){
+  	a:=True
+  }else{
+  	a:=False
+  }
+
+}
+
+
+fun main() {
+  expres(3)
+}
+ '''
+sa = SemanticAnalizer()
+program = cuca.yacc.parse(data)
+print "------------------------------- AST from input program ------------------------------- "
+#print program
+  
+sa.analizeProgram(program)
+
+cucaracha_compiler = CucarachaCompiler()
+cucaracha_compiler.cuca_compile(program)
 

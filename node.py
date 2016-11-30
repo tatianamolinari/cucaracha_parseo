@@ -6,11 +6,18 @@ class Node:
 
 	def __init__(self,typeNode,children=None,leaf=None):
 	  	self.typeNode = typeNode
+	  	self.resultRegister = "" 
 	  	if children:
 	  		self.children = children
 	  	else:
 	  		self.children = [ ]
 	    	self.leaf = leaf
+
+	def assemblerInstructionName(self):
+		return ""
+
+	def isBinaryIntExpression(self):
+		return True
 
 	def isFunction(self):
 		return False
@@ -143,7 +150,7 @@ class Function(Node):
 		c_code = "cuca_" + self.getName() + ":\n" + "push rbp\n" + "mov rbp , rsp\n"
 		cant_variables = len(self.getLocalVariables())
 		if cant_variables != 0:
-			c_code = c_code + "sub rsp, " + str(8*cant_variables) + "\n"
+			c_code = c_code + "mov rsp, " + str(8*cant_variables) + "\n"
 		
 		return c_code
 
@@ -287,7 +294,9 @@ class ExprConstNum(Node):
 
 	def getAssembler(self,compiler):
 		register = compiler.takeRegister()
-		return "mov rdi, " + str(self.leaf) + "\n"
+		self.resultRegister = register
+		return "mov " + register + ", " + str(self.leaf) + "\n"
+
 	
 	def __str__(self,level=0):
 	  	ret = "  "*level+ "(" +str(self.typeNode)+"\n"
@@ -314,11 +323,13 @@ class ExprConstBool(Node):
 		return 'Bool'
 
 	def getAssembler(self,compiler):
+		register = compiler.takeRegister()
+		self.resultRegister = register
 		c_code = ""
 		if self.leaf == "True":
-			c_code = "mov rdi, -1\n"
+			c_code = "mov " + register + ", " +"-1\n"
 		else:
-			c_code = "mov rdi, 0\n"
+			c_code = "mov " + register + ", " +"0\n"
 		return c_code
 
 class ExprVecMake(Node):
@@ -440,18 +451,44 @@ class BinaryBooleanExpression(Node):
 			raise TypeError("ERROR expected two booleans")
 			return None
 
+	def getAssembler(self,compiler):
+		  
+		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
+		result1 = self.children[0].resultRegister
+		result2 = self.children[1].resultRegister
+		self.resultRegister=result1
+		compiler.freeRegister(result2)
+		return assembler + self.assemblerInstructionName() +" " + result1 + " , " + result2 + "\n"
+
+
 class ExprAnd(BinaryBooleanExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryBooleanExpression.__init__(self,'ExprAnd',children,leaf)
 
+	def assemblerInstructionName(self):
+		return "and"
+
 class ExprOr(BinaryBooleanExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryBooleanExpression.__init__(self,'ExprOr',children,leaf)
+	
+	def assemblerInstructionName(self):
+		return "or"
 
 
 class ExprNot(BinaryBooleanExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryBooleanExpression.__init__(self,'ExprNot',children,leaf)
+
+	def assemblerInstructionName(self):
+		return "not"
+
+	def getAssembler(self,compiler):
+		  
+		assembler = self.children[0].getAssembler(compiler)
+		result1 = self.children[0].resultRegister
+		self.resultRegister=result1
+		return assembler + self.assemblerInstructionName() +" " + result1 + "\n"
 
 	def getType(self,table={}):
 		if(self.children[0].getType(table) == "Bool"):
@@ -467,27 +504,44 @@ class BinaryIntExpression(Node):
 		else:
 			raise TypeError("ERROR expected two integers")
 			return None
+	def isBinaryIntExpression(self):
+		return True
 
 
 class ExprLe(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntExpression.__init__(self,'ExprLe',children,leaf)
 
+	def assemblerInstructionName(self,compiler):
+		return "jle "
+
 class ExprGe(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntExpression.__init__(self,'ExprGe',children,leaf)
+	
+	def assemblerInstructionName(self,compiler):
+		return "jge "
 
 class ExprLt(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntExpression.__init__(self,'ExprLt',children,leaf)
+	
+	def assemblerInstructionName(self,compiler):
+		return "jlt "
 
 class ExprGt(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntExpression.__init__(self,'ExprGt',children,leaf)
 
+	def assemblerInstructionName(self,compiler):
+		return "gt "
+
 class ExprEq(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntExpression.__init__(self,'ExprEq',children,leaf)
+
+	def assemblerInstructionName(self,compiler):
+		return "je "
 
 	def getType(self,table={}):
 		return 'Bool'
@@ -495,6 +549,9 @@ class ExprEq(BinaryIntExpression):
 class ExprNe(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntExpression.__init__(self,'ExprNe',children,leaf)
+
+	def assemblerInstructionName(self,compiler):
+		return "jne "
 
 	def getType(self,table={}):
 		return 'Bool'
@@ -506,11 +563,17 @@ class BinaryIntAritmeticExpression(Node):
 		else:
 			raise TypeError("ERROR expected two integers")
 			return None
+
+
 	def getAssembler(self,compiler):
-		 
-		#r1 = compiler.takeRegister(self)
-		#assembler =
-		return "mov rdi, " + str(self.leaf) + "\n"
+		  
+		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
+		result1 = self.children[0].resultRegister
+		result2 = self.children[1].resultRegister
+		self.resultRegister=result1
+		compiler.freeRegister(result2)
+		return assembler + self.assemblerInstructionName() +" " + result1 + " , " + result2 + "\n"
+
 	def isBinaryIntAritmeticExpression(self):
 		return True
 
@@ -519,13 +582,44 @@ class ExprAdd(BinaryIntAritmeticExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntAritmeticExpression.__init__(self,'ExprAdd',children,leaf)
 
+	def assemblerInstructionName(self):
+		return "add"
+
 class ExprSub(BinaryIntAritmeticExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntAritmeticExpression.__init__(self,'ExprSub',children,leaf)
 
+	def assemblerInstructionName(self):
+		return "sub"
+
 class ExprMul(BinaryIntAritmeticExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntAritmeticExpression.__init__(self,'ExprMul',children,leaf)
+
+	def assemblerInstructionName(self):
+		return "imul"
+
+	def getAssembler(self,compiler):
+		  
+		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
+		result1 = self.children[0].resultRegister
+		result2 = self.children[1].resultRegister
+		other_register = result2
+		if not result1=="rax" and not result2=="rax":
+			register = compiler.takeRegister("rax")
+			assembler = assembler + "mov " + register + " , " + result1 + "\n"
+			compiler.freeRegister(result1)
+			self.children[0].resultRegister= register
+		elif result2=="rax":
+			other_register = result1
+			register = compiler.takeRegister("rax")
+			assembler = assembler + "mov " + register + " , " + result2 + "\n"
+			compiler.freeRegister(result2)
+			self.children[0].resultRegister= register
+
+		self.resultRegister=result1
+		compiler.freeRegister(result2)
+		return assembler + self.assemblerInstructionName() + " " + other_register + "\n"
 
 
 
