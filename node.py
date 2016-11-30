@@ -124,8 +124,8 @@ class Function(Node):
 		params = {}
 		for child in self.children:
 			if child.isParameter():
-				params[child.children[0].leaf] = i
 				i=i+1
+				params[child.children[0].leaf] = i
 		return params
 
 	def getParametersTypes(self):
@@ -507,6 +507,23 @@ class BinaryIntExpression(Node):
 	def isBinaryIntExpression(self):
 		return True
 
+	def getAssembler(self,compiler):
+		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
+		result1 = self.children[0].resultRegister
+		result2 = self.children[1].resultRegister
+		self.resultRegister=result1
+		compiler.freeRegister(result2)
+		label1 = compiler.getNextLabel() 
+		label2 = compiler.getNextLabel() 
+		assembler = assembler + "cmp " + result1 + " , " + result2  + "\n" 
+		assembler = assembler + self.assemblerInstructionName(compiler) + " " + label1 + "\n"
+		assembler = assembler + "mov " + result1 + " , 0 \n"
+		assembler = assembler + "jmp " + label2 + "\n"
+		assembler = assembler + label1+" :\n"
+		assembler = assembler + "mov " + result1 + " , -1 \n"
+		assembler = assembler + label2+" :\n"
+		return assembler
+
 
 class ExprLe(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):
@@ -605,6 +622,7 @@ class ExprMul(BinaryIntAritmeticExpression):
 		result1 = self.children[0].resultRegister
 		result2 = self.children[1].resultRegister
 		other_register = result2
+		register = "rax"
 		if not result1=="rax" and not result2=="rax":
 			register = compiler.takeRegister("rax")
 			assembler = assembler + "mov " + register + " , " + result1 + "\n"
@@ -612,18 +630,12 @@ class ExprMul(BinaryIntAritmeticExpression):
 			self.children[0].resultRegister= register
 		elif result2=="rax":
 			other_register = result1
-			register = compiler.takeRegister("rax")
-			assembler = assembler + "mov " + register + " , " + result2 + "\n"
+			register = result2
 			compiler.freeRegister(result2)
-			self.children[0].resultRegister= register
 
-		self.resultRegister=result1
-		compiler.freeRegister(result2)
+		self.resultRegister=register
+		compiler.freeRegister(other_register)
 		return assembler + self.assemblerInstructionName() + " " + other_register + "\n"
-
-
-
-
 
 
 

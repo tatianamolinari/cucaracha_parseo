@@ -9,11 +9,14 @@ class CucarachaCompiler:
 		self.registers = {"rsi":True, "rbx":True, "rcx":True, 
 						  "rdx":True, "r8":True, "r9":True, "r10":True, "r11":True, 
 						  "r12":True, "r13":True, "r14":True, "r15":True}
-		self.dicParametres = {}
 		self.rax = True
 		self.rdi = True
 		self.current_label_index = 0
 	
+	def getNextLabel(self):
+		self.current_label_index = self.current_label_index + 1
+		return ".label_" + str(self.current_label_index)
+
 	def freeRegister(self,name):
 		if name=="rdi":
 			self.rdi=True
@@ -93,22 +96,40 @@ class CucarachaCompiler:
 		self.cuca_assembler = self.cuca_assembler + instruction.getAssembler(self)
 		register_result = instruction.children[1].resultRegister
 
-		if instruction.isParameter() or instruction.getName() in parameters_with_index.keys():
+		if instruction.getName() in parameters_with_index.keys():
 			dicParameters[instruction.getName()] = "[rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)]"
 			self.cuca_assembler = self.cuca_assembler + "mov [rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)], "+ register_result +"\n" 
 		
 		else:
 			current_variable = current_variable + 1
-			dicParameters[instruction.getName()] = "mov [rbp - 8 * " + str(current_variable) + "]"
+			dicParameters[instruction.getName()] = "[rbp - 8 * " + str(current_variable) + "]"
 			self.cuca_assembler = self.cuca_assembler + "mov [rbp - 8 * " + str(current_variable) + "], "+ register_result +"\n"
 		
 		self.freeRegister(register_result)
 	
 	def compile_ConditionStmt(self, instruction, current_variable,parameters_with_index,dicParameters):
 		
-		assembler = instruction.getCondition().getAssembler(compiler)
-		label = ".label_" + str
-		self.current_label_index = current_label_index + 1
+		condition = instruction.getCondition()
+		blocks = instruction.getBlocks()
+		self.cuca_assembler = condition.getAssembler(self)
+		label1 = self.getNextLabel()
+		self.cuca_assembler = self.cuca_assembler + "cmp " + condition.resultRegister + " , 0 \n"
+		self.cuca_assembler = self.cuca_assembler + "je " + label1 + ":\n"
+		#assembler = assembler + blocks[0].getAssembler(self)
+		self.compileBlockFunction(blocks[0],parameters_with_index,dicParameters)
+		if len(blocks)==2:
+			label2 = self.getNextLabel()
+			self.cuca_assembler = self.cuca_assembler + "jmp" + label2 + ":\n"
+			self.cuca_assembler = self.cuca_assembler + label1+" :\n"
+			#assembler = assembler + blocks[1].getAssembler(self)
+			self.compileBlockFunction(blocks[1],parameters_with_index,dicParameters)
+
+		else:
+			self.cuca_assembler = self.cuca_assembler + label1+" :\n"
+
+
+
+		
 
 
 

@@ -67,10 +67,8 @@ fun main() {
 data = ''' 
 
 fun expres(i : Int) {
-  if(i<1){
+  if(4<1){
   	a:=True
-  }else{
-  	a:=False
   }
 
 }
