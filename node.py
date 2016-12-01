@@ -281,6 +281,12 @@ class ExprVar(Node):
 	  	ret = ret + "  "*(level)+ ")" +"\n"
 	  	return ret
 
+	def getAssembler(self, compiler):
+		print "exprrrrrrrrrrrrrr " + self.leaf.leaf
+		self.resultRegister = compiler.dicParameters[self.leaf.leaf]
+		print self.resultRegister
+		return ""
+
 	def getType(self,table={}):
 		name = self.leaf.leaf
 		if name in table.keys():
@@ -398,6 +404,8 @@ class StmtCall(Node):
 			function = table[name]
 			function_params = function.getParametersTypes()
 			params_expressions_call = self.getParametersExpressions()
+			print "aaaaaaaaaaaaaaaa"
+			print params_expressions_call
 			function_params_num = len(function_params)
 			params_expressions_num = len(params_expressions_call)
 			if function_params_num != params_expressions_num:
@@ -511,6 +519,7 @@ class BinaryIntExpression(Node):
 		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
 		result1 = self.children[0].resultRegister
 		result2 = self.children[1].resultRegister
+		print "binnnnnnnnnnnnnnnnnnnnnnnnnnnnn " + self.resultRegister
 		self.resultRegister=result1
 		compiler.freeRegister(result2)
 		label1 = compiler.getNextLabel() 

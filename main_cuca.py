@@ -25,10 +25,11 @@ if __name__ == "__main__":
 	# 	data = f.read()
 	# 	f.close()
 
-	data = ''' 
+	data1 = ''' 
 
 fun expres(i : Int) {
-  i := 2 * 2 - 5
+  j := 2 * 2 - 5
+  j := 0
 }
 
 fun stat(i : Int): Int {
@@ -51,7 +52,7 @@ fun main() {
 }
  '''
 
-data = ''' 
+data2 = ''' 
 
 fun expres(i : Int) {
   i := (2 + 1) * 2
@@ -64,9 +65,9 @@ fun main() {
 }
  '''
 
-data = ''' 
+data3 = ''' 
 
-fun expres(i : Int) {
+fun expres(i : Int, y : Int) {
   if(4<1){
   	a:=True
   }
@@ -75,13 +76,23 @@ fun expres(i : Int) {
 
 
 fun main() {
-  expres(3)
+  expres(3,2 -1)
 }
  '''
+
+data4 = ''' 
+
+fun main() {
+	i := (2 + 1) * 2
+	j := 4
+	putNum(i)
+}
+ '''
+
 sa = SemanticAnalizer()
-program = cuca.yacc.parse(data)
+program = cuca.yacc.parse(data1)
 print "------------------------------- AST from input program ------------------------------- "
-#print program
+print program
   
 sa.analizeProgram(program)
 
