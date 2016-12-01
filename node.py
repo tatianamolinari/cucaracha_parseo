@@ -1,6 +1,7 @@
 import sys, os
 sys.path.insert(0,"../..")
 from semantic_exceptions import *
+from collections import OrderedDict
 
 class Node:
 
@@ -139,7 +140,7 @@ class Function(Node):
 		return True
 
 	def getLocalVariables(self):
-		localVariables = {}
+		localVariables = OrderedDict()
 		self.getBlock().getLocalVariables(localVariables)
 		for parameter in self.getParameters():
 			if localVariables.get(parameter):
@@ -282,9 +283,7 @@ class ExprVar(Node):
 	  	return ret
 
 	def getAssembler(self, compiler):
-		print "exprrrrrrrrrrrrrr " + self.leaf.leaf
 		self.resultRegister = compiler.dicParameters[self.leaf.leaf]
-		print self.resultRegister
 		return ""
 
 	def getType(self,table={}):
@@ -404,8 +403,6 @@ class StmtCall(Node):
 			function = table[name]
 			function_params = function.getParametersTypes()
 			params_expressions_call = self.getParametersExpressions()
-			print "aaaaaaaaaaaaaaaa"
-			print params_expressions_call
 			function_params_num = len(function_params)
 			params_expressions_num = len(params_expressions_call)
 			if function_params_num != params_expressions_num:
@@ -519,7 +516,6 @@ class BinaryIntExpression(Node):
 		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
 		result1 = self.children[0].resultRegister
 		result2 = self.children[1].resultRegister
-		print "binnnnnnnnnnnnnnnnnnnnnnnnnnnnn " + self.resultRegister
 		self.resultRegister=result1
 		compiler.freeRegister(result2)
 		label1 = compiler.getNextLabel() 

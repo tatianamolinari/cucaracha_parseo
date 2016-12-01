@@ -119,8 +119,6 @@ class SemanticAnalizer:
 			raise Error("Error. Function type " + type_fun + " must have a 'return' statement")
 
 	def checkCallStmt(self,instruction,vars_table):
-		print instruction.isCallStmt()
-		print instruction.isCallExpr()
 		instruction.getType(vars_table)
 
 	def checkReturnStmt(self,instruction,vars_table,type_fun):

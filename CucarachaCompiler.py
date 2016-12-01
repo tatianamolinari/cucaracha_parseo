@@ -84,7 +84,6 @@ class CucarachaCompiler:
 	def compileBlockFunction(self, blockFunction,parameters_with_index):
 		current_variable = 0
 
-		print "blockkkkkkkkkkkkkkkkkkkkk"
 		for instruction in blockFunction.children:
 			if instruction.isStmtAssign():
 				self.compile_stmtAssign(instruction, parameters_with_index)
@@ -107,10 +106,8 @@ class CucarachaCompiler:
 			self.cuca_assembler = self.cuca_assembler + "mov [rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)], "+ register_result +"\n" 
 		
 		else:
-			print "currrrrrrrrrrrrrrrrrrrrrrr "
-			print self.local_variables[instruction.getName()]
-			current_variable = 0
-			current_variable = current_variable + 1
+			print self.local_variables.keys()
+			current_variable = list(self.local_variables.keys()).index(instruction.getName()) + 1
 			self.dicParameters[instruction.getName()] = "[rbp - 8 * " + str(current_variable) + "]"
 			self.cuca_assembler = self.cuca_assembler + "mov [rbp - 8 * " + str(current_variable) + "], "+ register_result +"\n"
 		
