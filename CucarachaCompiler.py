@@ -4,7 +4,7 @@ class CucarachaCompiler:
 
 	def __init__(self):		
 		self.program = None
-		self.cuca_assembler = "section .data\n" + "lli_format_string db '%lli'\n" + "section . text\n" + "global main\n" + "extern exit, putChar, printf\n\n"
+		self.cuca_assembler = "section .data\n" + "lli_format_string db '%lli'\n" + "section .text\n" + "global main\n" + "extern exit, putChar, printf\n\n"
 		self.registers_name = ["rsi","rbx","rcx","rdx","r8","r9","r10","r11","r12","r13","r14","r15"]
 		self.registers = {"rsi":True, "rbx":True, "rcx":True, 
 						  "rdx":True, "r8":True, "r9":True, "r10":True, "r11":True, 
@@ -18,6 +18,9 @@ class CucarachaCompiler:
 	def getNextLabel(self):
 		self.current_label_index = self.current_label_index + 1
 		return ".label_" + str(self.current_label_index)
+
+	def isRegister(self,name):
+		return name in registers_name or name in ['rdi','rax']
 
 	def freeRegister(self,name):
 		if name=="rdi":
@@ -114,18 +117,23 @@ class CucarachaCompiler:
 		self.freeRegister(register_result)
 	
 	def compile_ConditionStmt(self, instruction, parameters_with_index):
-		
+		if instruction.isWhileStmt():
+			label_loop = self.getNextLabel()
+			self.cuca_assembler = self.cuca_assembler + label_loop + " :\n"
+
 		condition = instruction.getCondition()
 		blocks = instruction.getBlocks()
 		self.cuca_assembler = self.cuca_assembler + condition.getAssembler(self)
 		label1 = self.getNextLabel()
-		self.cuca_assembler = self.cuca_assembler + "cmp " + condition.resultRegister + " , 0 \n"
+		self.cuca_assembler = self.cuca_assembler + "cmp " + condition.helper_register + " , 0 \n"
 		self.cuca_assembler = self.cuca_assembler + "je " + label1 + ":\n"
 		#assembler = assembler + blocks[0].getAssembler(self)
 		self.compileBlockFunction(blocks[0],parameters_with_index)
+		if instruction.isWhileStmt():
+			self.cuca_assembler = self.cuca_assembler + "jmp " + label_loop + "\n"
 		if len(blocks)==2:
 			label2 = self.getNextLabel()
-			self.cuca_assembler = self.cuca_assembler + "jmp" + label2 + ":\n"
+			self.cuca_assembler = self.cuca_assembler + "jmp " + label2 + "\n"
 			self.cuca_assembler = self.cuca_assembler + label1+" :\n"
 			#assembler = assembler + blocks[1].getAssembler(self)
 			self.compileBlockFunction(blocks[1],parameters_with_index)
@@ -146,7 +154,7 @@ class CucarachaCompiler:
 		for parameter_expression in list_parameters_expression:
 			self.cuca_assembler = self.cuca_assembler + parameter_expression.getAssembler(self)
 		if name == "putChar":
-			self.cuca_assembler = self.cuca_assembler + "call putChar\n"
+			self.cuca_assembler = self.cuca_assembler + "call putchar\n"
 		if name == "putNum":
 			current_result_register = list_parameters_expression[0].resultRegister
 			self.freeRegister(current_result_register)

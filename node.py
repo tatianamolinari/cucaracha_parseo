@@ -7,7 +7,8 @@ class Node:
 
 	def __init__(self,typeNode,children=None,leaf=None):
 	  	self.typeNode = typeNode
-	  	self.resultRegister = "" 
+	  	self.resultRegister = ""
+	  	self.helper_register = "" 
 	  	if children:
 	  		self.children = children
 	  	else:
@@ -19,6 +20,9 @@ class Node:
 
 	def isBinaryIntExpression(self):
 		return True
+	
+	def isWhileStmt(self):
+		return False
 
 	def isFunction(self):
 		return False
@@ -230,6 +234,7 @@ class StmtVecAssign(Node):
 
 
 class ConditionStmt(Node):
+
 	
 	def isCondtionStmt(self):
 		return True
@@ -258,6 +263,9 @@ class StmtIfElse(ConditionStmt):
 class StmtWhile(ConditionStmt):
 	def __init__(self,children=[],leaf=None):
 		ConditionStmt.__init__(self,'StmtWhile',children,leaf)
+
+	def isWhileStmt(self):
+		return True
 
 class StmtReturn(Node):
 	def __init__(self,children=[],leaf=None):
@@ -522,11 +530,13 @@ class BinaryIntExpression(Node):
 		label2 = compiler.getNextLabel() 
 		assembler = assembler + "cmp " + result1 + " , " + result2  + "\n" 
 		assembler = assembler + self.assemblerInstructionName(compiler) + " " + label1 + "\n"
-		assembler = assembler + "mov " + result1 + " , 0 \n"
+		register_cmp = compiler.takeRegister()
+		assembler = assembler + "mov " + register_cmp + " , 0 \n"
 		assembler = assembler + "jmp " + label2 + "\n"
 		assembler = assembler + label1+" :\n"
-		assembler = assembler + "mov " + result1 + " , -1 \n"
+		assembler = assembler + "mov " + register_cmp + " , -1 \n"
 		assembler = assembler + label2+" :\n"
+		self.helper_register = register_cmp
 		return assembler
 
 

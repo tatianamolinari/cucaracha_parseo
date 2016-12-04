@@ -89,8 +89,32 @@ fun main() {
 }
  '''
 
+data5 = ''' 
+
+fun main() {
+	i:=2
+	while(i>0)
+	{
+	 i:=5
+	}
+
+}
+ '''
+
+data6 = '''
+fun f(x : Int) {
+  putChar(x)
+  putChar(10)
+}
+
+fun main() {
+  f(65)
+  f(66)
+}
+ '''
+
 sa = SemanticAnalizer()
-program = cuca.yacc.parse(data1)
+program = cuca.yacc.parse(data5)
 print "------------------------------- AST from input program ------------------------------- "
 print program
   
