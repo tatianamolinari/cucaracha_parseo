@@ -65,7 +65,13 @@ class CucarachaCompiler:
 
 		self.compile_main()
 
-		print self.cuca_assembler	
+		
+		print self.cuca_assembler
+
+		print "\nREGISTROS"
+		print self.registers
+		print "rdi: "+ str(self.rdi)
+		print "rax: "+ str(self.rax)	
 
 		print "-------------------------------------------------------------------------------------- "
 
@@ -76,8 +82,6 @@ class CucarachaCompiler:
 			self.dicParameters = {}
 			for p in parameters_with_index.keys():
 				self.dicParameters[p] = "[rbp + " + str(8 * (parameters_with_index[p]+ 1)) + "]"
-			#if self.isPrimitive(name):
-			#	self.compile_primitives(name)
 			self.local_variables = node.getLocalVariables()
 			self.cuca_assembler = self.cuca_assembler + node.getAssembler(self)
 			self.compileBlockFunction(node.getBlock(),parameters_with_index)
@@ -90,12 +94,16 @@ class CucarachaCompiler:
 		current_variable = 0
 
 		for instruction in blockFunction.children:
+			if instruction.isStmtAssign() and instruction.children[1].isExprVecMake():
+				self.compile_exprVecMake(instruction, parameters_with_index)
 			if instruction.isStmtAssign():
 				self.compile_stmtAssign(instruction, parameters_with_index)
 			if instruction.isCondtionStmt():
 				self.compile_ConditionStmt(instruction, parameters_with_index)
 			if instruction.isCallExpr():
 				self.compile_callExpr(instruction, parameters_with_index)
+			if instruction.isExprVecMake():
+				self.compile_exprVecMake(instruction, parameters_with_index)
 			#if instruction.isBinaryIntAritmeticExpression():
 			#	self.compile_BinaryIntAritmeticExpression(instruction, current_variable,parameters_with_index,dicParameters)
 
@@ -109,10 +117,8 @@ class CucarachaCompiler:
 		if instruction.getName() in parameters_with_index.keys():
 			#self.dicParameters[instruction.getName()] = "[rbp + " + str(8 * (parameters_with_index[instruction.getName()]+ 1)) + "]"
 			self.cuca_assembler = self.cuca_assembler + "mov " + self.dicParameters[instruction.getName()]+", "+ register_result +"\n" 
-
 			#self.dicParameters[instruction.getName()] = "[rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)]"
 			#self.cuca_assembler = self.cuca_assembler + "mov [rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)], "+ register_result +"\n" 
-		
 		else:
 			current_variable = list(self.local_variables.keys()).index(instruction.getName()) + 1
 			self.dicParameters[instruction.getName()] = "[rbp - " + str(8 * current_variable) + "]"
@@ -167,3 +173,24 @@ class CucarachaCompiler:
 			self.cuca_assembler = self.cuca_assembler + "mov rdi , lli_format_string\n"
 			self.cuca_assembler = self.cuca_assembler + "mov rax , 0\n"
 			self.cuca_assembler = self.cuca_assembler + "call printf\n"
+
+
+	def compile_exprVecMake(self,instruction, parameters_with_index):
+		current_variable = list(self.local_variables.keys()).index(instruction.getName()) + 1
+		self.dicParameters[instruction.getName()] = "[rbp - " + str(8 * current_variable) + "]"
+		register = self.takeRegister()
+		vec = instruction.children[1]
+		expressions_vec = vec.getElements()
+		self.cuca_assembler = self.cuca_assembler + "sub rsp, " + str((len(expressions_vec)+1)*8) + "\n"
+		self.cuca_assembler = self.cuca_assembler + "mov " + register + ", rsp \n"
+		i=1
+		for exp in expressions_vec:
+			self.cuca_assembler = self.cuca_assembler + exp.getAssembler(self)
+			self.cuca_assembler = self.cuca_assembler + "mov qword ["+ register + "+"+ str(i*8)+"], " +  exp.resultRegister + "\n"
+			self.freeRegister(exp.resultRegister)
+			i= i + 1
+		#self.cuca_assembler = self.cuca_assembler + "mov [rbp - " + str(8 * current_variable) + "], "+ register +"\n"
+		#instruction.resultRegister= register
+		vec.resultRegister= register
+
+

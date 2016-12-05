@@ -18,6 +18,9 @@ class Node:
 	def assemblerInstructionName(self):
 		return ""
 
+	def isExprVecMake(self):
+		return False
+
 	def isBinaryIntExpression(self):
 		return True
 	
@@ -348,6 +351,12 @@ class ExprConstBool(Node):
 class ExprVecMake(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprVecMake',children,leaf)
+
+	def isExprVecMake(self):
+		return True
+
+	def getElements(self):
+		return self.children
 
 	def getType(self,table={}):
 		for exp in self.children:
