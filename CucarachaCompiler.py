@@ -74,6 +74,8 @@ class CucarachaCompiler:
 			name = node.getName()
 			parameters_with_index = node.getParametersWithIndex()
 			self.dicParameters = {}
+			for p in parameters_with_index.keys():
+				self.dicParameters[p] = "[rbp + " + str(8 * (parameters_with_index[p]+ 1)) + "]"
 			#if self.isPrimitive(name):
 			#	self.compile_primitives(name)
 			self.local_variables = node.getLocalVariables()
@@ -105,14 +107,16 @@ class CucarachaCompiler:
 		register_result = instruction.children[1].resultRegister
 
 		if instruction.getName() in parameters_with_index.keys():
-			self.dicParameters[instruction.getName()] = "[rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)]"
-			self.cuca_assembler = self.cuca_assembler + "mov [rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)], "+ register_result +"\n" 
+			#self.dicParameters[instruction.getName()] = "[rbp + " + str(8 * (parameters_with_index[instruction.getName()]+ 1)) + "]"
+			self.cuca_assembler = self.cuca_assembler + "mov " + self.dicParameters[instruction.getName()]+", "+ register_result +"\n" 
+
+			#self.dicParameters[instruction.getName()] = "[rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)]"
+			#self.cuca_assembler = self.cuca_assembler + "mov [rbp + 8 *(" + str(parameters_with_index[instruction.getName()]) + "+ 1)], "+ register_result +"\n" 
 		
 		else:
-			print self.local_variables.keys()
 			current_variable = list(self.local_variables.keys()).index(instruction.getName()) + 1
-			self.dicParameters[instruction.getName()] = "[rbp - 8 * " + str(current_variable) + "]"
-			self.cuca_assembler = self.cuca_assembler + "mov [rbp - 8 * " + str(current_variable) + "], "+ register_result +"\n"
+			self.dicParameters[instruction.getName()] = "[rbp - " + str(8 * current_variable) + "]"
+			self.cuca_assembler = self.cuca_assembler + "mov [rbp - " + str(8 * current_variable) + "], "+ register_result +"\n"
 		
 		self.freeRegister(register_result)
 	

@@ -114,7 +114,7 @@ fun main() {
  '''
 
 sa = SemanticAnalizer()
-program = cuca.yacc.parse(data5)
+program = cuca.yacc.parse(data6)
 print "------------------------------- AST from input program ------------------------------- "
 print program
   
