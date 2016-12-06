@@ -101,30 +101,21 @@ fun main() {
 }
  '''
 
-data6 = '''
-fun f(x : Int) {
-  putChar(x)
-  putChar(10)
-}
-
-fun main() {
-  f(65)
-  f(66)
-}
- '''
-
 data7 = '''
-fun f(x : Int, y : Int) {
-  putChar(x)
-  putChar(y)
-  putChar(x)
-  putChar(10)
+fun f(h : Int, o : Int) {
+  l := 108
+  a := 97
+  enter := 10
+  putChar(h)
+  putChar(o)
+  putChar(l)
+  putChar(a)
+  putChar(enter)
 }
 
 fun main() {
-  f(65, 66)
-  f(66, 67)
-  f(67, 68)
+  f(104, 111)
+  f(72, 79)
 }
 ''' 
 

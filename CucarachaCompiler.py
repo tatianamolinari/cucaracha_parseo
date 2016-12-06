@@ -20,7 +20,7 @@ class CucarachaCompiler:
 		return ".label_" + str(self.current_label_index)
 
 	def isRegister(self,name):
-		return name in registers_name or name in ['rdi','rax']
+		return name in self.registers_name or name in ['rdi','rax']
 
 	def freeRegister(self,name):
 		if name=="rdi":
@@ -171,8 +171,11 @@ class CucarachaCompiler:
 		for parameter_expression in list_parameters_expression:
 			self.cuca_assembler = self.cuca_assembler + parameter_expression.getAssembler(self)
 		current_result_register = list_parameters_expression[0].resultRegister
-		self.freeRegister(current_result_register)
+		if self.isRegister(current_result_register):
+			self.freeRegister(current_result_register)
 		if name == "putChar":
+			if not(current_result_register == "rdi"):
+				self.cuca_assembler = self.cuca_assembler + "mov rdi, " + current_result_register + "\n"
 			self.cuca_assembler = self.cuca_assembler + "call putchar\n"
 		if name == "putNum":
 			if not(current_result_register == "rsi"):

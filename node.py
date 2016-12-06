@@ -156,11 +156,10 @@ class Function(Node):
 
 	def getAssembler(self,compiler): 
 		c_code = "cuca_" + self.getName() + ":\n" 
-		if self.getName() != 'main':
-			c_code = c_code + "push rbp\n" + "mov rbp , rsp\n"
+		c_code = c_code + "push rbp\n" + "mov rbp , rsp\n"
 		cant_variables = len(self.getLocalVariables())
 		if cant_variables != 0:
-			c_code = c_code + "mov rsp, " + str(8*cant_variables) + "\n"
+			c_code = c_code + "sub rsp, " + str(8*cant_variables) + "\n"
 		
 		return c_code
 
@@ -421,7 +420,14 @@ class StmtCall(Node):
 		for exp in paramters_expressions:
 			c_code = c_code + exp.getAssembler(compiler)
 			register = exp.resultRegister
-			compiler.freeRegister(resultRegister)
+			if compiler.isRegister(register):
+				compiler.freeRegister(register)
+			else:
+				aux_register = compiler.takeRegister()
+				c_code = c_code + "mov " + aux_register +"," + register + "\n"
+				register = aux_register
+				compiler.freeRegister(register)
+
 			c_code = c_code + "mov [ rsp + " +str(i*8)+"] ," + register + "\n"
 			i=i+1
 		c_code = c_code + "call_" + self.getName() + "\n"
@@ -473,13 +479,19 @@ class ExprCall(Node):
 			for exp in paramters_expressions:
 				c_code = c_code + exp.getAssembler(compiler)
 				register = exp.resultRegister
-				compiler.freeRegister(register)
+				if compiler.isRegister(register):
+					compiler.freeRegister(register)
+				else:
+					aux_register = compiler.takeRegister()
+					c_code = c_code + "mov " + aux_register +"," + register + "\n"
+					register = aux_register
+					compiler.freeRegister(register)
 				c_code = c_code + "mov [ rsp + " +str(i*8)+"] ," + register + "\n"
 				i=i+1
 		c_code = c_code + "call cuca_" + self.getName() + "\n"
 		if number_of_parameters>0:
 			c_code = c_code + "add rsp, " + str(number_of_parameters*8) + "\n"
-			c_code = c_code + "pop rbp \n"
+			#c_code = c_code + "pop rbp \n"
 		return c_code
 
 	def getType(self,table={}):
