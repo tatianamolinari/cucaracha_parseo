@@ -85,6 +85,7 @@ class CucarachaCompiler:
 			self.local_variables = node.getLocalVariables()
 			self.cuca_assembler = self.cuca_assembler + node.getAssembler(self)
 			self.compileBlockFunction(node.getBlock(),parameters_with_index)
+			self.cuca_assembler = self.cuca_assembler + "mov rbp , rsp\npop rbp\n"
 			self.cuca_assembler = self.cuca_assembler + "  ret\n\n"
 		else: 
 			for child in node.children:
@@ -102,6 +103,9 @@ class CucarachaCompiler:
 				self.compile_ConditionStmt(instruction, parameters_with_index)
 			if instruction.isCallExpr():
 				self.compile_callExpr(instruction, parameters_with_index)
+			if instruction.isCallStmt():
+				self.compile_callExpr(instruction, parameters_with_index)
+
 			if instruction.isExprVecMake():
 				self.compile_exprVecMake(instruction, parameters_with_index)
 			#if instruction.isBinaryIntAritmeticExpression():
@@ -154,6 +158,9 @@ class CucarachaCompiler:
 	def compile_callExpr(self, instruction, parameters_with_index):
 		if self.isPrimitive(instruction.getName()):
 			self.compile_primitives(instruction)
+		else:
+			self.cuca_assembler = self.cuca_assembler + instruction.getAssembler(self)
+
 
 	def isPrimitive(self, name):
 		return name == "putChar" or name == "putNum"

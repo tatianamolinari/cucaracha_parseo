@@ -114,16 +114,17 @@ fun main() {
  '''
 
 data7 = '''
-fun f() {
-  putChar(104)
-  putChar(111)
-  putChar(108)
-  putChar(97)
+fun f(x : Int, y : Int) {
+  putChar(x)
+  putChar(y)
+  putChar(x)
   putChar(10)
 }
 
 fun main() {
-  f()
+  f(65, 66)
+  f(66, 67)
+  f(67, 68)
 }
 ''' 
 

@@ -413,6 +413,22 @@ class StmtCall(Node):
 		params_expressions = self.children[1:]
 		return params_expressions
 
+	def getAssembler(self,compiler):
+		paramters_expressions = self.getParametersExpressions()
+		number_of_parameters = len(paramters_expressions)
+		c_code = c_code + "sub rsp, " + str(number_of_parameters*8) + "\n"
+		i = 0
+		for exp in paramters_expressions:
+			c_code = c_code + exp.getAssembler(compiler)
+			register = exp.resultRegister
+			compiler.freeRegister(resultRegister)
+			c_code = c_code + "mov [ rsp + " +str(i*8)+"] ," + register + "\n"
+			i=i+1
+		c_code = c_code + "call_" + self.getName() + "\n"
+		c_code = c_code + "add rsp, " + str(number_of_parameters*8) + "\n"
+		c_code = c_code + "pop rbp \n"
+		return c_code
+
 	def isCallStmt(self):
 		return True
 
@@ -446,6 +462,25 @@ class ExprCall(Node):
 
 	def isCallExpr(self):
 		return True
+
+	def getAssembler(self,compiler):
+		paramters_expressions = self.getParametersExpressions()
+		number_of_parameters = len(paramters_expressions)
+		c_code = ""
+		if number_of_parameters>0:
+			c_code = "sub rsp, " + str(number_of_parameters*8) + "\n"
+			i = 0
+			for exp in paramters_expressions:
+				c_code = c_code + exp.getAssembler(compiler)
+				register = exp.resultRegister
+				compiler.freeRegister(register)
+				c_code = c_code + "mov [ rsp + " +str(i*8)+"] ," + register + "\n"
+				i=i+1
+		c_code = c_code + "call cuca_" + self.getName() + "\n"
+		if number_of_parameters>0:
+			c_code = c_code + "add rsp, " + str(number_of_parameters*8) + "\n"
+			c_code = c_code + "pop rbp \n"
+		return c_code
 
 	def getType(self,table={}):
 		name = self.getName()
