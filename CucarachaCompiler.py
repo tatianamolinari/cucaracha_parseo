@@ -4,7 +4,7 @@ class CucarachaCompiler:
 
 	def __init__(self):		
 		self.program = None
-		self.cuca_assembler = "section .data\n" + "lli_format_string db '%lli'\n" + "section .text\n" + "global main\n" + "extern exit, putChar, printf\n\n"
+		self.cuca_assembler = "section .data\n" + "lli_format_string db \"%lli\"\n" + "section .text\n" + "global main\n" + "extern exit, putchar, printf\n\n"
 		self.registers_name = ["rsi","rbx","rcx","rdx","r8","r9","r10","r11","r12","r13","r14","r15"]
 		self.registers = {"rsi":True, "rbx":True, "rcx":True, 
 						  "rdx":True, "r8":True, "r9":True, "r10":True, "r11":True, 
@@ -163,11 +163,11 @@ class CucarachaCompiler:
 		list_parameters_expression = instruction.getParametersExpressions()
 		for parameter_expression in list_parameters_expression:
 			self.cuca_assembler = self.cuca_assembler + parameter_expression.getAssembler(self)
+		current_result_register = list_parameters_expression[0].resultRegister
+		self.freeRegister(current_result_register)
 		if name == "putChar":
 			self.cuca_assembler = self.cuca_assembler + "call putchar\n"
 		if name == "putNum":
-			current_result_register = list_parameters_expression[0].resultRegister
-			self.freeRegister(current_result_register)
 			if not(current_result_register == "rsi"):
 				self.cuca_assembler = self.cuca_assembler + "mov rsi, " + current_result_register + "\n"
 			self.cuca_assembler = self.cuca_assembler + "mov rdi , lli_format_string\n"

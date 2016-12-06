@@ -114,10 +114,17 @@ fun main() {
  '''
 
 data7 = '''
-fun main () {
-x := [1 , 2 , 3]
+fun f() {
+  putChar(104)
+  putChar(111)
+  putChar(108)
+  putChar(97)
+  putChar(10)
 }
 
+fun main() {
+  f()
+}
 ''' 
 
 sa = SemanticAnalizer()

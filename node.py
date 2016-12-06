@@ -155,7 +155,9 @@ class Function(Node):
 		return localVariables
 
 	def getAssembler(self,compiler): 
-		c_code = "cuca_" + self.getName() + ":\n" + "push rbp\n" + "mov rbp , rsp\n"
+		c_code = "cuca_" + self.getName() + ":\n" 
+		if self.getName() != 'main':
+			c_code = c_code + "push rbp\n" + "mov rbp , rsp\n"
 		cant_variables = len(self.getLocalVariables())
 		if cant_variables != 0:
 			c_code = c_code + "mov rsp, " + str(8*cant_variables) + "\n"
