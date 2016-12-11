@@ -137,15 +137,16 @@ class CucarachaCompiler:
 			self.cuca_assembler = self.cuca_assembler + label_loop + " :\n"
 
 		condition = instruction.getCondition()
-		print "aaaaaaaaaaaaaaaa"
-		print condition
-		print "sasasasa"
-		print condition.getAssembler(self)
 		blocks = instruction.getBlocks()
 		self.cuca_assembler = self.cuca_assembler + condition.getAssembler(self)
+
+		if condition.isExpVar():
+			condition.helper_register = self.takeRegister()
+			self.cuca_assembler = self.cuca_assembler + "mov " + condition.helper_register + " , "+ condition.resultRegister+ "\n"
 		label1 = self.getNextLabel()
 		self.cuca_assembler = self.cuca_assembler + "cmp " + condition.helper_register + " , 0 \n"
-		self.cuca_assembler = self.cuca_assembler + "je " + label1 + ":\n"
+		self.freeRegister(condition.helper_register)
+		self.cuca_assembler = self.cuca_assembler + "je " + label1 + "\n"
 		#assembler = assembler + blocks[0].getAssembler(self)
 		self.compileBlockFunction(blocks[0],parameters_with_index)
 		if instruction.isWhileStmt():
@@ -156,7 +157,7 @@ class CucarachaCompiler:
 			self.cuca_assembler = self.cuca_assembler + label1+" :\n"
 			#assembler = assembler + blocks[1].getAssembler(self)
 			self.compileBlockFunction(blocks[1],parameters_with_index)
-
+			self.cuca_assembler = self.cuca_assembler + label2+" :\n"
 		else:
 			self.cuca_assembler = self.cuca_assembler + label1+" :\n"
 

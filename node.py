@@ -18,6 +18,9 @@ class Node:
 	def assemblerInstructionName(self):
 		return ""
 
+	def isExpVar(self):
+		return False
+
 	def isExprConstBool(self):
 		return False
 
@@ -301,6 +304,9 @@ class ExprVar(Node):
 		self.resultRegister = compiler.dicParameters[self.leaf.leaf]
 		return ""
 
+	def isExpVar(self):
+		return True 
+
 	def getType(self,table={}):
 		name = self.leaf.leaf
 		if name in table.keys():
@@ -348,6 +354,7 @@ class ExprConstBool(Node):
 	def getAssembler(self,compiler):
 		register = compiler.takeRegister()
 		self.resultRegister = register
+		self.helper_register = register
 		c_code = ""
 		if self.leaf == "True":
 			c_code = "mov " + register + ", " +"-1\n"
@@ -532,6 +539,11 @@ class BinaryBooleanExpression(Node):
 		  
 		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
 		result1 = self.children[0].resultRegister
+		if not compiler.isRegister(result1):
+			helper_register = compiler.takeRegister()
+			assembler = assembler + "mov " + helper_register + " , "+ result1+ "\n"
+			result1 = helper_register
+
 		result2 = self.children[1].resultRegister
 		self.resultRegister=result1
 		compiler.freeRegister(result2)
@@ -564,6 +576,11 @@ class ExprNot(BinaryBooleanExpression):
 		  
 		assembler = self.children[0].getAssembler(compiler)
 		result1 = self.children[0].resultRegister
+		if not compiler.isRegister(result1):
+			helper_register = compiler.takeRegister()
+			assembler = assembler + "mov " + helper_register + " , "+ result1+ "\n"
+			result1 = helper_register
+
 		self.resultRegister=result1
 		return assembler + self.assemblerInstructionName() +" " + result1 + "\n"
 
@@ -592,10 +609,18 @@ class BinaryIntExpression(Node):
 		if compiler.isRegister(result2):
 			compiler.freeRegister(result2)
 		label1 = compiler.getNextLabel() 
-		label2 = compiler.getNextLabel() 
-		assembler = assembler + "cmp " + result1 + " , " + result2  + "\n" 
+		label2 = compiler.getNextLabel()
+
+		if not compiler.isRegister(result1):
+			helper_register = compiler.takeRegister()
+			assembler = assembler + "mov " + helper_register + " , " + result2  + "\n"
+			result1 = helper_register
+			compiler.freeRegister(helper_register)
+
+		assembler = assembler + "cmp " + result1 + " , " + result2  + "\n"
 		assembler = assembler + self.assemblerInstructionName(compiler) + " " + label1 + "\n"
 		register_cmp = compiler.takeRegister()
+		print register_cmp
 		assembler = assembler + "mov " + register_cmp + " , 0 \n"
 		assembler = assembler + "jmp " + label2 + "\n"
 		assembler = assembler + label1+" :\n"
