@@ -63,7 +63,6 @@ class SemanticAnalizer:
 			raise Error("Error: Must exist a main function")
 
 	def checkFunctionVariables(self):
-
 		for function in self.program_functions.values():
 			dic_function = self.program_functions.copy()
 			dic_function.pop('main')

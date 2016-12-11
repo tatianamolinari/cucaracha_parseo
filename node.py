@@ -18,6 +18,9 @@ class Node:
 	def assemblerInstructionName(self):
 		return ""
 
+	def isExprConstBool(self):
+		return False
+
 	def isExprVecMake(self):
 		return False
 
@@ -336,6 +339,9 @@ class ExprConstBool(Node):
 	  	ret = ret + "  "*(level)+ ")" +"\n"
 	  	return ret
 
+	def isExprConstBool(self):
+		return True 	
+
 	def getType(self,table={}):
 		return 'Bool'
 
@@ -583,7 +589,8 @@ class BinaryIntExpression(Node):
 		result1 = self.children[0].resultRegister
 		result2 = self.children[1].resultRegister
 		self.resultRegister=result1
-		compiler.freeRegister(result2)
+		if compiler.isRegister(result2):
+			compiler.freeRegister(result2)
 		label1 = compiler.getNextLabel() 
 		label2 = compiler.getNextLabel() 
 		assembler = assembler + "cmp " + result1 + " , " + result2  + "\n" 
@@ -660,9 +667,20 @@ class BinaryIntAritmeticExpression(Node):
 		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
 		result1 = self.children[0].resultRegister
 		result2 = self.children[1].resultRegister
-		self.resultRegister=result1
-		compiler.freeRegister(result2)
-		return assembler + self.assemblerInstructionName() +" " + result1 + " , " + result2 + "\n"
+		if  not compiler.isRegister(result1):
+			reg_aux = compiler.takeRegister()
+			assembler = assembler + "mov " + reg_aux + ", " + result1 + "\n"
+			result1 = reg_aux
+		self.resultRegister=result1	
+		if not (compiler.isRegister(result2)) and (not compiler.isRegister(result1)) :
+			reg_aux = compiler.takeRegister()
+			assembler = assembler + "mov " + reg_aux + ", " + result2 + "\n"
+			compiler.freeRegister(reg_aux)
+			result2 = reg_aux
+		if compiler.isRegister(result2):
+			compiler.freeRegister(result2)
+		assembler = assembler + self.assemblerInstructionName() +" " + result1 + " , " + result2 + "\n"
+		return assembler
 
 	def isBinaryIntAritmeticExpression(self):
 		return True
@@ -707,6 +725,13 @@ class ExprMul(BinaryIntAritmeticExpression):
 			compiler.freeRegister(result2)
 
 		self.resultRegister=register
+		if not compiler.isRegister(other_register):
+			other_aux_egister = compiler.takeRegister()
+			assembler = assembler + "mov " + other_aux_egister + " , " + other_register + "\n"
+			other_register = other_aux_egister
+			compiler.freeRegister(other_register)
+		if result1=="rax" and result2=="rax":
+			print "aca son rax los dos!!"
 		compiler.freeRegister(other_register)
 		return assembler + self.assemblerInstructionName() + " " + other_register + "\n"
 

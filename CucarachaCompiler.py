@@ -85,7 +85,7 @@ class CucarachaCompiler:
 			self.local_variables = node.getLocalVariables()
 			self.cuca_assembler = self.cuca_assembler + node.getAssembler(self)
 			self.compileBlockFunction(node.getBlock(),parameters_with_index)
-			self.cuca_assembler = self.cuca_assembler + "mov rbp , rsp\npop rbp\n"
+			self.cuca_assembler = self.cuca_assembler + "mov rsp , rbp\npop rbp\n"
 			self.cuca_assembler = self.cuca_assembler + "  ret\n\n"
 		else: 
 			for child in node.children:
@@ -126,7 +126,8 @@ class CucarachaCompiler:
 		else:
 			current_variable = list(self.local_variables.keys()).index(instruction.getName()) + 1
 			self.dicParameters[instruction.getName()] = "[rbp - " + str(8 * current_variable) + "]"
-			self.cuca_assembler = self.cuca_assembler + "mov [rbp - " + str(8 * current_variable) + "], "+ register_result +"\n"
+			if not "[rbp - " + str(8 * current_variable) + "]" == register_result:
+				self.cuca_assembler = self.cuca_assembler + "mov [rbp - " + str(8 * current_variable) + "], "+ register_result +"\n"
 		
 		self.freeRegister(register_result)
 	
@@ -136,6 +137,10 @@ class CucarachaCompiler:
 			self.cuca_assembler = self.cuca_assembler + label_loop + " :\n"
 
 		condition = instruction.getCondition()
+		print "aaaaaaaaaaaaaaaa"
+		print condition
+		print "sasasasa"
+		print condition.getAssembler(self)
 		blocks = instruction.getBlocks()
 		self.cuca_assembler = self.cuca_assembler + condition.getAssembler(self)
 		label1 = self.getNextLabel()
