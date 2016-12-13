@@ -290,6 +290,12 @@ class StmtReturn(Node):
 	def getLocalVariables(self, localVariables={}):
 		return ""
 
+	def getAssembler(self,compiler):
+		print self
+		assembler = self.children[0].getAssembler(compiler)
+		self.resultRegister = self.children[0].resultRegister 
+		return assembler 
+
 class ExprVar(Node):
 	def __init__(self,children=[],leaf=None):
 		Node.__init__(self,'ExprVar',children,leaf)
@@ -428,7 +434,7 @@ class StmtCall(Node):
 	def getAssembler(self,compiler):
 		paramters_expressions = self.getParametersExpressions()
 		number_of_parameters = len(paramters_expressions)
-		c_code = c_code + "sub rsp, " + str(number_of_parameters*8) + "\n"
+		c_code = "sub rsp, " + str(number_of_parameters*8) + "\n"
 		i = 0
 		for exp in paramters_expressions:
 			c_code = c_code + exp.getAssembler(compiler)
@@ -443,9 +449,10 @@ class StmtCall(Node):
 
 			c_code = c_code + "mov [ rsp + " +str(i*8)+"] ," + register + "\n"
 			i=i+1
-		c_code = c_code + "call_" + self.getName() + "\n"
+		c_code = c_code + "call cuca_" + self.getName() + "\n"
 		c_code = c_code + "add rsp, " + str(number_of_parameters*8) + "\n"
 		c_code = c_code + "pop rbp \n"
+		self.resultRegister = "rax"
 		return c_code
 
 	def isCallStmt(self):
@@ -605,28 +612,31 @@ class BinaryIntExpression(Node):
 		assembler = self.children[0].getAssembler(compiler) + self.children[1].getAssembler(compiler)
 		result1 = self.children[0].resultRegister
 		result2 = self.children[1].resultRegister
-		self.resultRegister=result1
-		if compiler.isRegister(result2):
-			compiler.freeRegister(result2)
+		#self.resultRegister=result1
+
 		label1 = compiler.getNextLabel() 
 		label2 = compiler.getNextLabel()
 
 		if not compiler.isRegister(result1):
 			helper_register = compiler.takeRegister()
-			assembler = assembler + "mov " + helper_register + " , " + result2  + "\n"
+			assembler = assembler + "mov " + helper_register + " , " + result1  + "\n"
 			result1 = helper_register
 			compiler.freeRegister(helper_register)
+		if compiler.isRegister(result2):
+			compiler.freeRegister(result2)
 
 		assembler = assembler + "cmp " + result1 + " , " + result2  + "\n"
+		compiler.freeRegister(result1)
 		assembler = assembler + self.assemblerInstructionName(compiler) + " " + label1 + "\n"
 		register_cmp = compiler.takeRegister()
-		print register_cmp
 		assembler = assembler + "mov " + register_cmp + " , 0 \n"
 		assembler = assembler + "jmp " + label2 + "\n"
 		assembler = assembler + label1+" :\n"
 		assembler = assembler + "mov " + register_cmp + " , -1 \n"
 		assembler = assembler + label2+" :\n"
 		self.helper_register = register_cmp
+		self.resultRegister=register_cmp	
+
 		return assembler
 
 
@@ -649,14 +659,14 @@ class ExprLt(BinaryIntExpression):
 		BinaryIntExpression.__init__(self,'ExprLt',children,leaf)
 	
 	def assemblerInstructionName(self,compiler):
-		return "jlt "
+		return "jl "
 
 class ExprGt(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):
 		BinaryIntExpression.__init__(self,'ExprGt',children,leaf)
 
 	def assemblerInstructionName(self,compiler):
-		return "gt "
+		return "jg "
 
 class ExprEq(BinaryIntExpression):
 	def __init__(self,children=[],leaf=None):

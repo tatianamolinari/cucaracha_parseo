@@ -104,20 +104,35 @@ class CucarachaCompiler:
 			if instruction.isCallExpr():
 				self.compile_callExpr(instruction, parameters_with_index)
 			if instruction.isCallStmt():
-				self.compile_callExpr(instruction, parameters_with_index)
-
+				self.compile_callStmt(instruction, parameters_with_index)
 			if instruction.isExprVecMake():
 				self.compile_exprVecMake(instruction, parameters_with_index)
+			if instruction.isReturnStmt():
+				self.compile_returnStmt(instruction, parameters_with_index)
+
 			#if instruction.isBinaryIntAritmeticExpression():
 			#	self.compile_BinaryIntAritmeticExpression(instruction, current_variable,parameters_with_index,dicParameters)
 
 	def compile_main(self):
 		self.cuca_assembler = self.cuca_assembler + "main:\n" + "    call cuca_main\n" + "    mov rdi , 0\n" + "    call exit\n"
 
+	def compile_returnStmt(self,instruction, parameters_with_index):
+		self.cuca_assembler = self.cuca_assembler + instruction.getAssembler(self)
+		register_result = instruction.resultRegister
+		helper_register = self.takeRegister("rax")
+		self.cuca_assembler = self.cuca_assembler + "mov " + helper_register + " , " + register_result + "\n"
+		instruction.resultRegister = helper_register
+		self.freeRegister(register_result)
+
 	def compile_stmtAssign(self, instruction, parameters_with_index):
 		self.cuca_assembler = self.cuca_assembler + instruction.getAssembler(self)
 		register_result = instruction.children[1].resultRegister
-
+		
+		if not self.isRegister(register_result):
+			helper_register = self.takeRegister()
+			self.cuca_assembler = self.cuca_assembler + "mov " + helper_register + " , " + register_result + "\n"
+			register_result = helper_register
+		
 		if instruction.getName() in parameters_with_index.keys():
 			#self.dicParameters[instruction.getName()] = "[rbp + " + str(8 * (parameters_with_index[instruction.getName()]+ 1)) + "]"
 			self.cuca_assembler = self.cuca_assembler + "mov " + self.dicParameters[instruction.getName()]+", "+ register_result +"\n" 
@@ -139,8 +154,8 @@ class CucarachaCompiler:
 		condition = instruction.getCondition()
 		blocks = instruction.getBlocks()
 		self.cuca_assembler = self.cuca_assembler + condition.getAssembler(self)
-
 		if condition.isExpVar():
+
 			condition.helper_register = self.takeRegister()
 			self.cuca_assembler = self.cuca_assembler + "mov " + condition.helper_register + " , "+ condition.resultRegister+ "\n"
 		label1 = self.getNextLabel()
@@ -166,6 +181,10 @@ class CucarachaCompiler:
 			self.compile_primitives(instruction)
 		else:
 			self.cuca_assembler = self.cuca_assembler + instruction.getAssembler(self)
+
+	def compile_callStmt(self, instruction, parameters_with_index):
+		self.cuca_assembler = self.cuca_assembler + instruction.getAssembler(self)
+		
 
 
 	def isPrimitive(self, name):

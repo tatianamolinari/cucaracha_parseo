@@ -102,34 +102,48 @@ fun main() {
  '''
 
 data7 = '''
-fun main() {
-    if 1 == 1 { putChar(65) }
-    if 1 == 2 { putChar(66) }
-    if 2 == 2 { putChar(67) }
-    if 3 == 2 { putChar(68) }
-    if 3 == 3 { putChar(69) }
 
-    x := 1
-    if x == 1 { putChar(70) }
-    if x == 2 { putChar(71) }
-    if 1 == x { putChar(72) }
-    if 2 == x { putChar(73) }
-    if x == x { putChar(74) }
+// Funciones que retornan valores: factorial recursivo
 
-    x := 2
-    if x == 1 { putChar(75) }
-    if x == 2 { putChar(76) }
-    if 1 == x { putChar(77) }
-    if 2 == x { putChar(78) }
-    if x == x { putChar(79) }
-    putChar(10)
-
+fun factorial(n : Int) : Int {
+		res:=0
+    if n == 0 {
+        res := 1
+    } else {
+        res := n * factorial(n - 1)
+    }
+    return res
 }
 
-''' 
+fun main() {
+    putNum(factorial(1)) putChar(10)
+    putNum(factorial(2)) putChar(10)
+    putNum(factorial(3)) putChar(10)
+    putNum(factorial(4)) putChar(10)
+    putNum(factorial(5)) putChar(10)
+    putNum(factorial(6)) putChar(10)
+    putNum(factorial(7)) putChar(10)
+    putNum(factorial(8)) putChar(10)
+    putNum(factorial(9)) putChar(10)
+    putNum(factorial(10)) putChar(10)
+}
+'''
+data8 = '''
+// Funciones que retornan valores: factorial recursivo
+
+fun factorial(n : Int) : Int {
+    return 0
+}
+
+fun main() {
+	putNum(23)
+    putNum(factorial(1)) putChar(10)
+
+}
+'''
 
 sa = SemanticAnalizer()
-program = cuca.yacc.parse(data7)
+program = cuca.yacc.parse(data8)
 print "------------------------------- AST from input program ------------------------------- "
 print program
   
@@ -137,4 +151,9 @@ sa.analizeProgram(program)
 
 cucaracha_compiler = CucarachaCompiler()
 cucaracha_compiler.cuca_compile(program)
+
+text_file = open('prueba.asm', 'w')
+text_file.write(cucaracha_compiler.cuca_assembler)
+text_file.close()
+
 
